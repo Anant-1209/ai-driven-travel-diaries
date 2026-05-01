@@ -7,13 +7,10 @@ export const validate = (schema) => (req, res, next) => {
     });
     next();
   } catch (err) {
-    const message = err.errors 
-      ? err.errors.map((e) => e.message).join(', ') 
-      : (err.message || 'Validation failed');
-      
+    const errorMessages = err.errors.map((e) => e.message).join('. ');
     return res.status(400).json({
       success: false,
-      message,
+      message: errorMessages || 'Invalid input data',
     });
   }
 };

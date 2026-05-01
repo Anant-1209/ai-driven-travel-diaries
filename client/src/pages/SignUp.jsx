@@ -25,13 +25,12 @@ export default function SignUp() {
         body: JSON.stringify(formData),
       });
       const data = await res.json();
-      if (data.success === false) {
-        return setErrorMessage(data.message);
+      if (!res.ok || data.success === false) {
+        setLoading(false);
+        return setErrorMessage(data.message || 'Something went wrong');
       }
       setLoading(false);
-      if(res.ok) {
-        navigate('/sign-in');
-      }
+      navigate('/sign-in');
     } catch (error) {
       setErrorMessage(error.message);
       setLoading(false);
@@ -64,6 +63,9 @@ export default function SignUp() {
                 id='username'
                 onChange={handleChange}
               />
+              <p className='text-[10px] text-gray-500 mt-1 italic'>
+                Min 7 chars, lowercase, no spaces.
+              </p>
             </div>
             <div>
               <Label value='Your email' />
