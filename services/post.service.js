@@ -17,15 +17,13 @@ export const createPostService = async (postData, userId) => {
 };
 
 export const getPostsService = async (query) => {
-  // Create a unique cache key based on the query string
-  const cacheKey = JSON.stringify(query);
-  if (postCache.has(cacheKey)) {
-    return postCache.get(cacheKey);
-  }
-
   const startIndex = parseInt(query.startIndex) || 0;
   const limit = parseInt(query.limit) || 9;
   const sortDirection = query.order === 'asc' ? 1 : -1;
+  const searchWords = query.searchTerm ? query.searchTerm.split(' ').filter(w => w.length > 1) : [];
+  
+  console.log(`[DEBUG] Searching for: "${query.searchTerm || 'None'}" (Keywords: ${searchWords.join(', ')})`);
+
   const posts = await Post.find({
     ...(query.userId && { userId: query.userId }),
     ...(query.category && { category: query.category }),
@@ -35,6 +33,9 @@ export const getPostsService = async (query) => {
       $or: [
         { title: { $regex: query.searchTerm, $options: 'i' } },
         { content: { $regex: query.searchTerm, $options: 'i' } },
+        // PERMISSIVE: match any word
+        ...searchWords.map(word => ({ title: { $regex: word, $options: 'i' } })),
+        ...searchWords.map(word => ({ content: { $regex: word, $options: 'i' } })),
       ],
     }),
   })
@@ -42,14 +43,15 @@ export const getPostsService = async (query) => {
     .skip(startIndex)
     .limit(limit);
 
+  const realCount = await Post.countDocuments();
+  console.log(`[DEBUG] Found ${posts.length} matching posts. (Database has ${realCount} total posts)`);
+
   const totalPosts = await Post.countDocuments();
   const now = new Date();
   const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
   const lastMonthPosts = await Post.countDocuments({ createdAt: { $gte: oneMonthAgo } });
 
-  const result = { posts, totalPosts, lastMonthPosts };
-  postCache.set(cacheKey, result);
-  return result;
+  return { posts, totalPosts, lastMonthPosts };
 };
 
 export const deletePostService = async (postId) => {

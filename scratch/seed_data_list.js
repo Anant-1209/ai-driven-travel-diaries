@@ -1,10 +1,4 @@
-import mongoose from 'mongoose';
-import Post from '../models/post.model.js';
-import dotenv from 'dotenv';
-
-dotenv.config();
-
-const posts = [
+export const posts = [
   // --- NORTH INDIA ---
   { title: 'Shimla: The Winter Queen (North India)', content: 'Shimla is the capital of Himachal Pradesh and the most famous hill station in North India.', image: 'https://images.unsplash.com/photo-1621252327771-6c2e39c4d9a2?auto=format&fit=crop&q=80&w=1200', category: 'nature', slug: 'shimla-north-india', userId: '65f123456789012345678901' },
   { title: 'Leh Ladakh: High Altitudes (North India)', content: 'Experience the magic of the Himalayas in North India.', image: 'https://images.unsplash.com/photo-1581791538302-03537b9c97bf?auto=format&fit=crop&q=80&w=1200', category: 'adventure', slug: 'leh-ladakh-north-india', userId: '65f123456789012345678901' },
@@ -37,39 +31,3 @@ const posts = [
   { title: 'Majuli: River Island (East India)', content: 'The largest river island in East India.', image: 'https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?auto=format&fit=crop&q=80&w=1200', category: 'nature', slug: 'majuli-east-india', userId: '65f123456789012345678901' },
   { title: 'Tawang: Monastic Clouds (East India)', content: 'Ancient culture in the hills of East India.', image: 'https://images.unsplash.com/photo-1581791538302-03537b9c97bf?auto=format&fit=crop&q=80&w=1200', category: 'adventure', slug: 'tawang-east-india', userId: '65f123456789012345678901' }
 ];
-
-const seedDB = async () => {
-  // Priority 1: MONGO_URI from env
-  // Priority 2: Docker internal network
-  // Priority 3: Localhost fallback
-  const uri = process.env.MONGO_URI || "mongodb://mongo:27017/mern-blog";
-  
-  console.log('-------------------------------------------');
-  console.log(`📡 Connecting to Database...`);
-  
-  try {
-    mongoose.set('strictQuery', false);
-    const conn = await mongoose.connect(uri, { serverSelectionTimeoutMS: 5000 });
-    console.log(`✅ CONNECTED TO MONGODB: ${conn.connection.name}`);
-
-    // 1. Clear ALL existing posts to ensure a fresh start
-    const deleted = await Post.deleteMany({});
-    console.log(`🗑️ Cleared ${deleted.deletedCount} old posts.`);
-
-    // 2. Insert new 24 destinations
-    console.log(`📦 Inserting 24 new destinations...`);
-    await Post.insertMany(posts);
-    
-    const count = await Post.countDocuments();
-    console.log(`✨ SUCCESS: Database now has ${count} iconic destinations!`);
-    console.log('-------------------------------------------');
-    process.exit(0);
-  } catch (err) {
-    console.error('❌ SEEDING FAILED!');
-    console.error('Error Details:', err.message);
-    console.log('-------------------------------------------');
-    process.exit(1);
-  }
-};
-
-seedDB();

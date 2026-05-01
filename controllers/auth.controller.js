@@ -14,7 +14,11 @@ export const signin = async (req, res, next) => {
     const { token, user } = await signinService(req.body);
     res
       .status(200)
-      .cookie('access_token', token, { httpOnly: true })
+      .cookie('access_token', token, {
+        httpOnly: true,
+        secure: false, // Set to false for HTTP development
+        sameSite: 'Lax',
+      })
       .json(user);
   } catch (error) {
     next(error);
@@ -26,7 +30,11 @@ export const google = async (req, res, next) => {
     const { token, user } = await googleAuthService(req.body);
     res
       .status(200)
-      .cookie('access_token', token, { httpOnly: true })
+      .cookie('access_token', token, {
+        httpOnly: true,
+        secure: false, // Set to false for HTTP development
+        sameSite: 'Lax',
+      })
       .json(user);
   } catch (error) {
     next(error);

@@ -39,26 +39,35 @@ export default function Destinations() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
-  const [searchTerm, setSearchTerm] = useState(searchParams.get('searchTerm') || '');
-
+  
+  const searchTermFromUrl = searchParams.get('searchTerm') || '';
+  const activeRegion = searchTermFromUrl;
   const activeCategory = searchParams.get('category') || '';
-  const activeRegion = searchParams.get('searchTerm') || '';
 
   useEffect(() => {
     const fetchPosts = async () => {
       setLoading(true);
       const urlParams = new URLSearchParams();
       if (activeCategory) urlParams.set('category', activeCategory);
-      if (searchTerm) urlParams.set('searchTerm', searchTerm);
+      if (searchTermFromUrl) urlParams.set('searchTerm', searchTermFromUrl);
       urlParams.set('limit', '12');
+      urlParams.set('t', Date.now()); // Cache buster
 
-      const res = await fetch(`/api/post/getPosts?${urlParams.toString()}`);
-      const data = await res.json();
-      setPosts(data.posts);
+      const apiUrl = `/api/post/getPosts?${urlParams.toString()}`;
+      console.log(`[DEBUG] Fetching from URL: ${apiUrl}`);
+
+      try {
+        const res = await fetch(apiUrl);
+        const data = await res.json();
+        console.log('[DEBUG] Received Data:', data);
+        setPosts(data.posts || []);
+      } catch (err) {
+        console.error('[DEBUG] Fetch Error:', err);
+      }
       setLoading(false);
     };
     fetchPosts();
-  }, [activeCategory, searchParams]);
+  }, [activeCategory, searchTermFromUrl]); 
 
   const handleCategoryChange = (cat) => {
     const newParams = new URLSearchParams(searchParams);
@@ -68,16 +77,17 @@ export default function Destinations() {
   };
 
   const handleRegionClick = (region) => {
-    setSearchTerm(region);
-    const newParams = new URLSearchParams(searchParams);
+    const newParams = new URLSearchParams(); // Start fresh
     newParams.set('searchTerm', region);
     setSearchParams(newParams);
   };
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
+    const term = e.target.search.value;
     const newParams = new URLSearchParams(searchParams);
-    newParams.set('searchTerm', searchTerm);
+    if (term) newParams.set('searchTerm', term);
+    else newParams.delete('searchTerm');
     setSearchParams(newParams);
   };
 
@@ -99,10 +109,10 @@ export default function Destinations() {
             <form onSubmit={handleSearchSubmit} className='max-w-xl mx-auto relative group'>
               <TextInput
                 type='text'
+                name='search'
                 placeholder='Search cities, regions or landmarks...'
                 className='w-full'
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                defaultValue={searchTermFromUrl}
                 icon={AiOutlineSearch}
               />
               <button className='absolute right-2 top-1/2 -translate-y-1/2 bg-teal-600 hover:bg-teal-700 text-white px-6 py-1.5 rounded-lg text-sm font-bold transition-all'>
@@ -156,7 +166,7 @@ export default function Destinations() {
           </div>
           {activeRegion && (
             <button 
-              onClick={() => { setSearchTerm(''); setSearchParams({}); }}
+              onClick={() => setSearchParams({})}
               className='text-xs font-bold text-red-500 hover:underline uppercase tracking-widest'
             >
               Clear Filters ✕
@@ -165,9 +175,9 @@ export default function Destinations() {
         </div>
 
         {/* Results Info */}
-        {(searchTerm || activeCategory) && !loading && (
+        {(searchTermFromUrl || activeCategory) && !loading && (
           <p className='text-sm text-slate-500 mb-8 italic'>
-            Showing results for: <span className='text-teal-600 font-bold'>"{searchTerm || activeCategory}"</span>
+            Showing results for: <span className='text-teal-600 font-bold'>"{searchTermFromUrl || activeCategory}"</span>
           </p>
         )}
 

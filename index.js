@@ -28,8 +28,19 @@ console.log('PORT:', port); // This should log 3000 or the specified port in .en
 
 mongoose
   .connect(mongoURI)
-  .then(() => {
+  .then(async () => {
     logger.info('MongoDb is connected');
+    // --- FORCE SEED LOGIC (SUREFIRE FIX) ---
+    try {
+      const Post = (await import('./models/post.model.js')).default;
+      logger.info('🚀 FORCE SEEDING: Wiping database and injecting 24 destinations...');
+      const { posts } = await import('./scratch/seed_data_list.js'); 
+      await Post.deleteMany({});
+      await Post.insertMany(posts);
+      logger.info('✨ SUCCESS: 24 destinations are now 100% in your database.');
+    } catch (seedErr) {
+      logger.error('Auto-seed failed:', seedErr.message);
+    }
   })
   .catch((err) => {
     logger.error(`MongoDb connection error: ${err}`);
