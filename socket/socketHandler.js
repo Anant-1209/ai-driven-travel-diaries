@@ -14,10 +14,13 @@ export const initSocket = (server) => {
   io.on('connection', (socket) => {
     console.log('User connected via Socket:', socket.id);
 
-    // Track user
+    // Track user (Support multiple tabs)
     socket.on('registerUser', (userId) => {
-      userSocketMap[userId] = socket.id;
-      console.log(`User ${userId} registered with socket ${socket.id}`);
+      if (!userSocketMap[userId]) {
+        userSocketMap[userId] = new Set();
+      }
+      userSocketMap[userId].add(socket.id);
+      console.log(`User ${userId} registered socket ${socket.id}. Total sockets: ${userSocketMap[userId].size}`);
     });
 
     // Join Post Room for active readers & typing
@@ -46,9 +49,12 @@ export const initSocket = (server) => {
     socket.on('disconnect', () => {
       console.log('User disconnected:', socket.id);
       // Remove from tracking map
-      for (const [userId, socketId] of Object.entries(userSocketMap)) {
-        if (socketId === socket.id) {
-          delete userSocketMap[userId];
+      for (const userId in userSocketMap) {
+        if (userSocketMap[userId].has(socket.id)) {
+          userSocketMap[userId].delete(socket.id);
+          if (userSocketMap[userId].size === 0) {
+            delete userSocketMap[userId];
+          }
           break;
         }
       }
@@ -64,8 +70,10 @@ export const getIo = () => {
 };
 
 export const notifyUser = (userId, event, data) => {
-  const socketId = userSocketMap[userId];
-  if (socketId && io) {
-    io.to(socketId).emit(event, data);
+  const socketIds = userSocketMap[userId];
+  if (socketIds && io) {
+    socketIds.forEach((socketId) => {
+      io.to(socketId).emit(event, data);
+    });
   }
 };

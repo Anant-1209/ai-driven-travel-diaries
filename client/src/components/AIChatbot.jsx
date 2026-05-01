@@ -65,7 +65,9 @@ export default function AIChatbot() {
           <div className='flex-1 p-3 overflow-y-auto flex flex-col gap-2'>
             {chatHistory.map((msg, idx) => (
               <div key={idx} className={`max-w-[80%] p-2 rounded-lg text-sm ${msg.role === 'user' ? 'bg-blue-100 dark:bg-blue-900 self-end' : 'bg-gray-100 dark:bg-slate-700 self-start'}`}>
-                <ReactMarkdown className='prose prose-sm dark:prose-invert max-w-none'>{msg.text}</ReactMarkdown>
+                <div className='prose prose-sm dark:prose-invert max-w-none'>
+                  <ReactMarkdown>{msg.text}</ReactMarkdown>
+                </div>
               </div>
             ))}
             {loading && <Spinner size='sm' className='self-start' />}

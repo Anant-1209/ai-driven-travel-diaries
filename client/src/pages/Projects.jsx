@@ -41,7 +41,7 @@ export default function Destinations() {
   const [searchParams, setSearchParams] = useSearchParams();
   
   const searchTermFromUrl = searchParams.get('searchTerm') || '';
-  const activeRegion = searchTermFromUrl;
+  const activeRegion = searchParams.get('region') || '';
   const activeCategory = searchParams.get('category') || '';
 
   useEffect(() => {
@@ -49,6 +49,7 @@ export default function Destinations() {
       setLoading(true);
       const urlParams = new URLSearchParams();
       if (activeCategory) urlParams.set('category', activeCategory);
+      if (activeRegion) urlParams.set('region', activeRegion);
       if (searchTermFromUrl) urlParams.set('searchTerm', searchTermFromUrl);
       urlParams.set('limit', '12');
       urlParams.set('t', Date.now()); // Cache buster
@@ -67,7 +68,7 @@ export default function Destinations() {
       setLoading(false);
     };
     fetchPosts();
-  }, [activeCategory, searchTermFromUrl]); 
+  }, [activeCategory, activeRegion, searchTermFromUrl]); 
 
   const handleCategoryChange = (cat) => {
     const newParams = new URLSearchParams(searchParams);
@@ -77,8 +78,8 @@ export default function Destinations() {
   };
 
   const handleRegionClick = (region) => {
-    const newParams = new URLSearchParams(); // Start fresh
-    newParams.set('searchTerm', region);
+    const newParams = new URLSearchParams(); // Start fresh for region navigation
+    newParams.set('region', region);
     setSearchParams(newParams);
   };
 

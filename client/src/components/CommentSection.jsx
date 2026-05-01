@@ -21,7 +21,10 @@ export default function CommentSection({ postId }) {
     if (socket) {
       socket.on('newComment', (newComment) => {
         if (newComment.postId === postId) {
-          setComments((prev) => [newComment, ...prev]);
+          setComments((prev) => {
+            if (prev.find((c) => c._id === newComment._id)) return prev;
+            return [newComment, ...prev];
+          });
         }
       });
       socket.on('commentLiked', ({ commentId, likes, numberOfLikes }) => {
@@ -63,7 +66,8 @@ export default function CommentSection({ postId }) {
       if (res.ok) {
         setComment('');
         setCommentError(null);
-        // Note: We don't manually prepend here anymore because 'newComment' socket event will handle it to prevent duplication
+        // We now rely 100% on the socket event to add the comment to the list. 
+        // This prevents double comments and ensures everyone sees it at the same time.
         if (socket) socket.emit('stopTyping', { postId });
       } else {
         setCommentError(data.message);

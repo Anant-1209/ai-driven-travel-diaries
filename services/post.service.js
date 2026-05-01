@@ -27,6 +27,7 @@ export const getPostsService = async (query) => {
   const posts = await Post.find({
     ...(query.userId && { userId: query.userId }),
     ...(query.category && { category: query.category }),
+    ...(query.region && { region: query.region }),
     ...(query.slug && { slug: query.slug }),
     ...(query.postId && { _id: query.postId }),
     ...(query.searchTerm && {

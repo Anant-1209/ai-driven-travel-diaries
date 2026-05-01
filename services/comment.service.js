@@ -17,14 +17,23 @@ export const createCommentService = async (commentData) => {
     userId: commentData.userId,
   });
   await newComment.save();
+  console.log(`[DEBUG] Comment saved to DB: ${newComment._id} for Post: ${commentData.postId}`);
   
   // Real-time: Emit to all users looking at this post
   try {
-    getIo().to(commentData.postId).emit('newComment', newComment);
-    // Real-time notification: Send to post author
+    const io = getIo();
+    if (io) {
+        io.to(commentData.postId).emit('newComment', newComment);
+    }
     const post = await Post.findById(commentData.postId);
-    if (post && post.userId !== commentData.userId) {
-      notifyUser(post.userId, 'notification', { message: 'Someone commented on your post!', postId: post._id });
+    if (post) {
+      // Professional Notification: Using the actual username
+      const senderName = req.user.username || 'A traveler';
+      notifyUser(post.userId, 'notification', { 
+        message: `${senderName} just commented on your travel story! ✍️`, 
+        postId: post._id,
+        postSlug: post.slug 
+      });
     }
   } catch (err) {
     console.error('Socket emit error', err);

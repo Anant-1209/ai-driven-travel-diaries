@@ -4,6 +4,7 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import PrivateRoute from './components/PrivateRoute';
 import OnlyAdminPrivateRoute from './components/OnlyAdminPrivateRoute';
+import GlobalNotification from './components/GlobalNotification';
 import ScrollToTop from './components/ScrollToTop';
 import AIChatbot from './components/AIChatbot';
 import { Spinner } from 'flowbite-react';
@@ -19,11 +20,13 @@ const UpdatePost = lazy(() => import('./pages/UpdatePost'));
 const PostPage = lazy(() => import('./pages/PostPage'));
 const Search = lazy(() => import('./pages/Search'));
 const AIPlanner = lazy(() => import('./pages/AIPlanner'));
+const Chat = lazy(() => import('./pages/Chat'));
 
 export default function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
+      <GlobalNotification />
       <Header />
       <Suspense fallback={<div className="flex justify-center items-center min-h-screen"><Spinner size="xl" /></div>}>
         <Routes>
@@ -34,6 +37,7 @@ export default function App() {
           <Route path='/search' element={<Search />} />
           <Route element={<PrivateRoute />}>
             <Route path='/dashboard' element={<Dashboard />} />
+            <Route path='/chat' element={<Chat />} />
           </Route>
           <Route element={<OnlyAdminPrivateRoute />}>
             <Route path='/create-post' element={<CreatePost />} />
