@@ -1,7 +1,7 @@
 {
-  "name": "mern-blog",
+  "name": "travel-diaries",
   "version": "1.0.0",
-  "description": "",
+  "description": "AI-Driven Travel Diaries Platform",
   "type": "module",
   "main": "index.js",
   "scripts": {

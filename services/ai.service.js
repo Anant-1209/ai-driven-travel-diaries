@@ -60,21 +60,33 @@ const generateWithGroq = async (prompt) => {
   }
 };
 
-// ===== UNIFIED GENERATOR (tries Gemini -> xAI -> Groq) =====
+// ===== UNIFIED GENERATOR (tries Gemini -> Groq -> xAI) =====
 const generate = async (prompt) => {
-  // 1. Try Gemini
-  const geminiResult = await generateWithGemini(prompt);
-  if (geminiResult) return geminiResult;
+  // 1. Try Gemini (Primary - Best Quality/Free)
+  try {
+    const geminiResult = await generateWithGemini(prompt);
+    if (geminiResult) return geminiResult;
+  } catch (e) {
+    console.error('Gemini Provider Error:', e.message);
+  }
 
-  // 2. Try xAI (Grok)
-  const xaiResult = await generateWithXAI(prompt);
-  if (xaiResult) return xaiResult;
+  // 2. Try Groq (Secondary - Best Speed/Reliability)
+  try {
+    const groqResult = await generateWithGroq(prompt);
+    if (groqResult) return groqResult;
+  } catch (e) {
+    console.error('Groq Provider Error:', e.message);
+  }
 
-  // 3. Fallback to Groq
-  const groqResult = await generateWithGroq(prompt);
-  if (groqResult) return groqResult;
+  // 3. Fallback to xAI (Tertiary - Final Backup)
+  try {
+    const xaiResult = await generateWithXAI(prompt);
+    if (xaiResult) return xaiResult;
+  } catch (e) {
+    console.error('xAI Provider Error:', e.message);
+  }
 
-  throw errorHandler(503, 'AI service is temporarily unavailable. Please try again in a minute.');
+  throw errorHandler(503, 'Our AI travel agents are currently busy. Please try again in a few moments.');
 };
 
 // ===== SERVICES =====
