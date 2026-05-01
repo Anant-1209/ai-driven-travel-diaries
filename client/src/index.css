@@ -1,0 +1,247 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Outfit', sans-serif;
+    scroll-behavior: smooth;
+  }
+}
+
+body {
+  height: 100vh;
+  @apply bg-slate-50 text-slate-900 dark:bg-[#0f172a] dark:text-slate-100 transition-colors duration-300;
+}
+
+/* ===== GLASSMORPHISM ===== */
+.glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+.dark .glass {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* ===== GRADIENTS ===== */
+.text-gradient {
+  background: linear-gradient(135deg, #0ea5e9, #10b981);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.text-gradient-warm {
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ===== HERO SECTION ===== */
+.hero-overlay {
+  position: relative;
+}
+.hero-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.15) 0%,
+    rgba(0, 0, 0, 0.5) 70%,
+    rgba(0, 0, 0, 0.75) 100%
+  );
+  z-index: 1;
+}
+
+/* ===== HORIZONTAL SCROLL CAROUSEL ===== */
+.scroll-container {
+  display: flex;
+  gap: 1.5rem;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  padding-bottom: 0.5rem;
+}
+.scroll-container::-webkit-scrollbar {
+  display: none;
+}
+.scroll-card {
+  scroll-snap-align: start;
+  flex-shrink: 0;
+}
+
+/* ===== MEGA MENU ===== */
+.mega-menu {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+.mega-menu-trigger:hover .mega-menu,
+.mega-menu-trigger:focus-within .mega-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* ===== DESTINATION CARD OVERLAY ===== */
+.destination-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.75rem;
+}
+.destination-card img {
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.destination-card:hover img {
+  transform: scale(1.08);
+}
+.destination-card .overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, transparent 50%);
+  z-index: 1;
+}
+.destination-card .card-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1.5rem;
+  z-index: 2;
+  color: white;
+}
+
+/* ===== NEWSLETTER SECTION ===== */
+.newsletter-bg {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  position: relative;
+  overflow: hidden;
+}
+.newsletter-bg::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.08) 0%, transparent 50%);
+  animation: float 15s infinite ease-in-out;
+}
+@keyframes float {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(30px, -30px); }
+}
+
+/* ===== CATEGORY BADGE ===== */
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-radius: 9999px;
+}
+.badge-adventure { background: #fef3c7; color: #92400e; }
+.badge-nature { background: #d1fae5; color: #065f46; }
+.badge-historical { background: #e0e7ff; color: #3730a3; }
+.badge-spiritual { background: #fce7f3; color: #9d174d; }
+.badge-uncategorized { background: #f1f5f9; color: #475569; }
+
+.dark .badge-adventure { background: #78350f; color: #fef3c7; }
+.dark .badge-nature { background: #064e3b; color: #d1fae5; }
+.dark .badge-historical { background: #312e81; color: #e0e7ff; }
+.dark .badge-spiritual { background: #831843; color: #fce7f3; }
+.dark .badge-uncategorized { background: #334155; color: #e2e8f0; }
+
+/* ===== SCROLL ARROW BUTTONS ===== */
+.scroll-arrow {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  border: 2px solid #1e293b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 1rem;
+}
+.scroll-arrow:hover {
+  background: #1e293b;
+  color: white;
+}
+.dark .scroll-arrow {
+  border-color: #e2e8f0;
+  background: #1e293b;
+  color: #e2e8f0;
+}
+.dark .scroll-arrow:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+/* ===== POST CONTENT ===== */
+.ql-editor {
+  font-size: 1.05rem;
+}
+.post-content p {
+  margin-bottom: 0.5rem;
+}
+.post-content h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  font-family: sans-serif;
+  margin: 1.5rem 0;
+}
+.post-content h2 {
+  font-size: 1.4rem;
+  font-family: sans-serif;
+  margin: 1.5rem 0;
+}
+.post-content a {
+  color: rgb(73, 149, 199);
+  text-decoration: none;
+}
+.post-content a:hover {
+  text-decoration: underline;
+}
+.dark .post-content a {
+  color: #38bdf8;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+.animation-delay-200 { animation-delay: 200ms; }
+.animation-delay-400 { animation-delay: 400ms; }
+.animation-delay-600 { animation-delay: 600ms; }
+
+@keyframes blob {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(20px, -30px) scale(1.05); }
+  50% { transform: translate(-10px, 20px) scale(0.95); }
+  75% { transform: translate(15px, 10px) scale(1.02); }
+}
+.animate-blob {
+  animation: blob 8s infinite ease-in-out;
+}
