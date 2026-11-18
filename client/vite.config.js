@@ -1,26 +1,25 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react-swc';
 
+const backendTarget = process.env.VITE_BACKEND_URL || 'http://localhost:5000';
+
 // https://vitejs.dev/config/
 export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://backend:3000',
+        target: backendTarget,
+        secure: false,
+      },
+      '/uploads': {
+        target: backendTarget,
         secure: false,
       },
       '/socket.io': {
-        target: 'http://backend:3000',
+        target: backendTarget,
         ws: true,
         secure: false,
       },
-    },
-    hmr: {
-      host: 'localhost',
-      clientPort: 5173,
-    },
-    watch: {
-      usePolling: true,
     },
   },
   plugins: [react()],

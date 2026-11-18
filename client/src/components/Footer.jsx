@@ -8,10 +8,10 @@ export default function FooterCom() {
     {
       title: 'Destinations',
       links: [
-        { name: 'Rajasthan', href: '/search?category=adventure' },
-        { name: 'Kerala', href: '/post/misty-tea-gardens-of-munnar' },
-        { name: 'Himachal Pradesh', href: '/post/winter-wonderland-visit-to-shimla' },
-        { name: 'Goa', href: '/post/sunny-days-sandy-beaches-goa' },
+        { name: 'Rajasthan (Jaipur)', href: '/post/jaipur' },
+        { name: 'Kerala (Munnar)', href: '/post/munnar' },
+        { name: 'Himachal (Shimla)', href: '/post/shimla' },
+        { name: 'Goa (Beaches)', href: '/post/goa' },
         { name: 'View All', href: '/destinations' },
       ],
     },

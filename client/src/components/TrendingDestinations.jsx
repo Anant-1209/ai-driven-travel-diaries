@@ -4,25 +4,25 @@ const DESTINATION_HIGHLIGHTS = [
   {
     title: 'Rann of Kutch',
     subtitle: 'The Great White Desert',
-    image: 'https://images.unsplash.com/photo-1616036740257-9449ea1f6605?auto=format&fit=crop&q=80&w=800',
+    image: 'https://images.unsplash.com/photo-1616843413587-9e3a37f7bbd8?auto=format&fit=crop&q=80&w=800',
     category: 'adventure',
-    slug: 'great-white-desert-rann-of-kutch',
+    slug: 'kutch',
     size: 'large',
   },
   {
     title: 'Varanasi',
     subtitle: 'Spiritual Heart of India',
-    image: 'https://images.unsplash.com/photo-1561361513-2d000a50f0dc?auto=format&fit=crop&q=80&w=800',
+    image: 'https://images.unsplash.com/photo-1584447128037-3563e77d7b3b?auto=format&fit=crop&q=80&w=800',
     category: 'spiritual',
-    slug: 'varanasi-spiritual-heart-india',
+    slug: 'varanasi',
     size: 'medium',
   },
   {
     title: 'Leh-Ladakh',
     subtitle: 'Land of High Passes',
-    image: 'https://images.unsplash.com/photo-1545063009-8472506e768e?auto=format&fit=crop&q=80&w=800',
+    image: 'https://images.unsplash.com/photo-1614522851996-5e04df77224f?auto=format&fit=crop&q=80&w=800',
     category: 'adventure',
-    slug: 'leh-ladakh-journey-to-high-passes',
+    slug: 'leh-ladakh',
     size: 'medium',
   },
   {
@@ -30,23 +30,23 @@ const DESTINATION_HIGHLIGHTS = [
     subtitle: 'Misty Tea Gardens',
     image: 'https://images.unsplash.com/photo-1593693397690-362cb9666fc2?auto=format&fit=crop&q=80&w=800',
     category: 'nature',
-    slug: 'misty-tea-gardens-of-munnar',
+    slug: 'munnar',
     size: 'small',
   },
   {
     title: 'Jaipur',
     subtitle: 'The Pink City',
     image: 'https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&q=80&w=800',
-    category: 'adventure',
-    slug: 'exploring-pink-city-jaipur',
+    category: 'historical',
+    slug: 'jaipur',
     size: 'small',
   },
   {
     title: 'Goa',
     subtitle: 'Sun, Sand & Spice',
-    image: 'https://images.unsplash.com/photo-1512341689857-198e7e2f3ca8?auto=format&fit=crop&q=80&w=800',
+    image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&q=80&w=800',
     category: 'nature',
-    slug: 'sunny-days-sandy-beaches-goa',
+    slug: 'goa',
     size: 'small',
   },
 ];
@@ -66,7 +66,7 @@ export default function TrendingDestinations() {
             </h2>
           </div>
           <Link
-            to='/projects'
+            to='/destinations'
             className='hidden sm:block text-xs font-semibold tracking-widest uppercase text-slate-600 dark:text-slate-300 hover:text-teal-600 transition-colors border-b-2 border-transparent hover:border-teal-600 pb-1'
           >
             View All

@@ -10,25 +10,37 @@ import { useSocket } from '../context/SocketContext';
 import { Avatar, Dropdown } from 'flowbite-react';
 
 const DESTINATIONS_MENU = {
-  trending: ['Rann of Kutch', 'Leh-Ladakh', 'Goa', 'Rishikesh'],
-  'North India': ['Shimla', 'Leh-Ladakh', 'Rishikesh', 'Varanasi'],
-  'South India': ['Munnar', 'Hampi', 'Andaman'],
-  'West India': ['Goa', 'Rann of Kutch', 'Jaipur'],
+  'North India': ['Shimla', 'Leh-Ladakh', 'Varanasi', 'Rishikesh', 'Srinagar', 'Manali'],
+  'South India': ['Munnar', 'Alleppey', 'Hampi', 'Pondicherry', 'Ooty', 'Madurai'],
+  'West India': ['Jaipur', 'Udaipur', 'Goa', 'Jaisalmer', 'Rann of Kutch', 'Lonavala'],
+  'East India': ['Darjeeling', 'Gangtok', 'Shillong', 'Kaziranga', 'Tawang', 'Cherrapunji'],
 };
 
 const SLUG_MAP = {
-  'Rann of Kutch': 'great-white-desert-rann-of-kutch',
-  'Leh-Ladakh': 'leh-ladakh-journey-to-high-passes',
-  'Goa': 'sunny-days-sandy-beaches-goa',
-  'Rishikesh': 'rishikesh-yoga-adventure-spirituality',
-  'Shimla': 'winter-wonderland-visit-to-shimla',
-  'Varanasi': 'varanasi-spiritual-heart-india',
-  'Munnar': 'misty-tea-gardens-of-munnar',
-  'Hampi': 'hampi-walking-through-ancient-ruins',
-  'Andaman': 'island-paradise-andaman-nicobar',
-  'Jaipur': 'exploring-pink-city-jaipur',
-  'Taj Mahal': 'eternal-beauty-of-taj-mahal',
-  'Darjeeling': 'darjeeling-tea-toy-trains-mountain-peaks',
+  'Rann of Kutch': 'kutch',
+  'Leh-Ladakh': 'leh-ladakh',
+  'Goa': 'goa',
+  'Rishikesh': 'rishikesh',
+  'Shimla': 'shimla',
+  'Varanasi': 'varanasi',
+  'Srinagar': 'srinagar',
+  'Manali': 'manali',
+  'Munnar': 'munnar',
+  'Alleppey': 'alleppey',
+  'Hampi': 'hampi',
+  'Pondicherry': 'pondicherry',
+  'Ooty': 'ooty',
+  'Madurai': 'madurai',
+  'Jaipur': 'jaipur',
+  'Udaipur': 'udaipur',
+  'Jaisalmer': 'jaisalmer',
+  'Lonavala': 'lonavala',
+  'Darjeeling': 'darjeeling',
+  'Gangtok': 'gangtok',
+  'Shillong': 'shillong',
+  'Kaziranga': 'kaziranga',
+  'Tawang': 'tawang',
+  'Cherrapunji': 'cherrapunji',
 };
 
 export default function Header() {
@@ -121,9 +133,9 @@ export default function Header() {
             {/* Destinations Mega Menu Trigger */}
             <div className='mega-menu-trigger relative'>
               <Link
-                to='/projects'
+                to='/destinations'
                 className={`flex items-center gap-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                  path === '/projects'
+                  path === '/destinations'
                     ? 'text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/30'
                     : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
@@ -133,8 +145,8 @@ export default function Header() {
               </Link>
 
               {/* Mega Menu Dropdown */}
-              <div className='mega-menu absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[600px] bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 p-6'>
-                <div className='grid grid-cols-3 gap-6'>
+              <div className='mega-menu absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[720px] max-w-[95vw] bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 p-6'>
+                <div className='grid grid-cols-2 md:grid-cols-4 gap-6'>
                   {Object.entries(DESTINATIONS_MENU).map(([region, places]) => (
                     <div key={region}>
                       <Link 

@@ -17,90 +17,80 @@ export default function CreatePost() {
   const [file, setFile] = useState(null);
   const [imageUploadProgress, setImageUploadProgress] = useState(null);
   const [imageUploadError, setImageUploadError] = useState(null);
+  const [videoFile, setVideoFile] = useState(null);
+  const [videoUploadProgress, setVideoUploadProgress] = useState(null);
+  const [videoUploadError, setVideoUploadError] = useState(null);
   const [formData, setFormData] = useState({});
   const [publishError, setPublishError] = useState(null);
   const [autoTagging, setAutoTagging] = useState(false);
 
   const navigate = useNavigate();
 
-  // const handleUpdloadImage = async () => {
-  //   try {
-  //     if (!file) {
-  //       setImageUploadError('Please select an image');
-  //       return;
-  //     }
-  //     setImageUploadError(null);
-  //     const storage = getStorage(app);
-  //     const fileName = new Date().getTime() + '-' + file.name;
-  //     const storageRef = ref(storage, fileName);
-  //     const uploadTask = uploadBytesResumable(storageRef, file);
-  //     uploadTask.on(
-  //       'state_changed',
-  //       (snapshot) => {
-  //         const progress =
-  //           (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-  //         setImageUploadProgress(progress.toFixed(0));
-  //       },
-  //       (error) => {
-  //         setImageUploadError('Image upload failed');
-  //         setImageUploadProgress(null);
-  //       },
-  //       () => {
-  //         getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-  //           setImageUploadProgress(null);
-  //           setImageUploadError(null);
-  //           setFormData({ ...formData, image: downloadURL });
-  //         });
-  //       }
-  //     );
-  //   } catch (error) {
-  //     setImageUploadError('Image upload failed');
-  //     setImageUploadProgress(null);
-  //     console.log(error);
-  //   }
-  // };
-
-const handleUpdloadImage = async () => {
-  try {
-    if (!file) {
-      setImageUploadError('Please select an image');
-      return;
-    }
-
-    setImageUploadError(null);
-    const storage = getStorage(app);
-    const fileName = new Date().getTime() + '-' + file.name;
-    const storageRef = ref(storage, fileName);
-    const uploadTask = uploadBytesResumable(storageRef, file);
-
-    uploadTask.on(
-      'state_changed',
-      (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        setImageUploadProgress(progress.toFixed(0));
-      },
-      (error) => {
-        console.error('Image upload failed:', error.message);
-        setImageUploadError('Image upload failed');
-        setImageUploadProgress(null);
-      },
-      () => {
-        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-          setImageUploadProgress(null);
-          setImageUploadError(null);
-          setFormData({ ...formData, image: downloadURL });
-        }).catch((error) => {
-          console.error('Failed to get download URL:', error.message);
-          setImageUploadError('Failed to retrieve image URL');
-        });
+  // Self-Hosted First-Party Image Upload
+  const handleUpdloadImage = async () => {
+    try {
+      if (!file) {
+        setImageUploadError('Please select an image');
+        return;
       }
-    );
-  } catch (error) {
-    console.error('Unexpected error during upload:', error.message);
-    setImageUploadError('Image upload failed');
-    setImageUploadProgress(null);
-  }
-};
+      setImageUploadError(null);
+      setImageUploadProgress(50);
+
+      const uploadData = new FormData();
+      uploadData.append('media', file);
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: uploadData,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setImageUploadError(data.message || 'Image upload failed');
+        setImageUploadProgress(null);
+        return;
+      }
+
+      setImageUploadProgress(100);
+      setFormData((prev) => ({ ...prev, image: data.url }));
+      setTimeout(() => setImageUploadProgress(null), 1000);
+    } catch (error) {
+      setImageUploadError('Server upload failed. Ensure you are signed in.');
+      setImageUploadProgress(null);
+    }
+  };
+
+  // Self-Hosted First-Party AI Video Guide Upload
+  const handleUploadVideo = async () => {
+    try {
+      if (!videoFile) {
+        setVideoUploadError('Please select a video file (.mp4, .webm)');
+        return;
+      }
+      setVideoUploadError(null);
+      setVideoUploadProgress(50);
+
+      const uploadData = new FormData();
+      uploadData.append('media', videoFile);
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: uploadData,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setVideoUploadError(data.message || 'Video upload failed');
+        setVideoUploadProgress(null);
+        return;
+      }
+
+      setVideoUploadProgress(100);
+      setFormData((prev) => ({ ...prev, videoUrl: data.url }));
+      setTimeout(() => setVideoUploadProgress(null), 1000);
+    } catch (error) {
+      setVideoUploadError('Server video upload failed. Ensure you are signed in.');
+      setVideoUploadProgress(null);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -157,12 +147,18 @@ const handleUpdloadImage = async () => {
 </Select>
 
         </div>
-        <div className='flex gap-4 items-center justify-between border-4 border-teal-500 border-dotted p-3'>
-          <FileInput
-            type='file'
-            accept='image/*'
-            onChange={(e) => setFile(e.target.files[0])}
-          />
+        {/* Image Upload Box */}
+        <div className='flex gap-4 items-center justify-between border-2 border-teal-500 border-dashed rounded-2xl p-4 bg-teal-50/50 dark:bg-slate-900/40'>
+          <div className='flex-1'>
+            <label className='block text-xs font-bold uppercase tracking-wider text-teal-800 dark:text-teal-300 mb-1'>
+              📸 Destination Image (Self-Hosted)
+            </label>
+            <FileInput
+              type='file'
+              accept='image/*'
+              onChange={(e) => setFile(e.target.files[0])}
+            />
+          </div>
           <Button
             type='button'
             gradientDuoTone='purpleToBlue'
@@ -172,14 +168,14 @@ const handleUpdloadImage = async () => {
             disabled={imageUploadProgress}
           >
             {imageUploadProgress ? (
-              <div className='w-16 h-16'>
+              <div className='w-14 h-14'>
                 <CircularProgressbar
                   value={imageUploadProgress}
                   text={`${imageUploadProgress || 0}%`}
                 />
               </div>
             ) : (
-              'Upload Image'
+              'Upload Photo'
             )}
           </Button>
         </div>
@@ -188,8 +184,50 @@ const handleUpdloadImage = async () => {
           <img
             src={formData.image}
             alt='upload'
-            className='w-full h-72 object-cover'
+            className='w-full h-64 object-cover rounded-xl shadow-md'
           />
+        )}
+
+        {/* AI Video Walkthrough Upload Box */}
+        <div className='flex gap-4 items-center justify-between border-2 border-purple-500 border-dashed rounded-2xl p-4 bg-purple-50/50 dark:bg-slate-900/40'>
+          <div className='flex-1'>
+            <label className='block text-xs font-bold uppercase tracking-wider text-purple-800 dark:text-purple-300 mb-1'>
+              🎬 AI Journey Video Guide (.mp4, .webm)
+            </label>
+            <FileInput
+              type='file'
+              accept='video/mp4,video/webm'
+              onChange={(e) => setVideoFile(e.target.files[0])}
+            />
+          </div>
+          <Button
+            type='button'
+            gradientDuoTone='purpleToPink'
+            size='sm'
+            outline
+            onClick={handleUploadVideo}
+            disabled={videoUploadProgress}
+          >
+            {videoUploadProgress ? (
+              <div className='w-14 h-14'>
+                <CircularProgressbar
+                  value={videoUploadProgress}
+                  text={`${videoUploadProgress || 0}%`}
+                />
+              </div>
+            ) : (
+              'Upload Video'
+            )}
+          </Button>
+        </div>
+        {videoUploadError && <Alert color='failure'>{videoUploadError}</Alert>}
+        {formData.videoUrl && (
+          <div className='p-2 bg-slate-900 rounded-xl'>
+            <span className='text-xs text-emerald-400 font-bold block mb-1'>✓ Video attached:</span>
+            <video controls className='w-full max-h-60 rounded-lg'>
+              <source src={formData.videoUrl} type='video/mp4' />
+            </video>
+          </div>
         )}
         <ReactQuill
           theme='snow'

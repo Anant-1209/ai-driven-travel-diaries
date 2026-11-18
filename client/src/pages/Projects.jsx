@@ -51,7 +51,7 @@ export default function Destinations() {
       if (activeCategory) urlParams.set('category', activeCategory);
       if (activeRegion) urlParams.set('region', activeRegion);
       if (searchTermFromUrl) urlParams.set('searchTerm', searchTermFromUrl);
-      urlParams.set('limit', '12');
+      urlParams.set('limit', '30');
       urlParams.set('t', Date.now()); // Cache buster
 
       const apiUrl = `/api/post/getPosts?${urlParams.toString()}`;

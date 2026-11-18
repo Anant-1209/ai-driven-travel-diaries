@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router-dom';
 import CallToAction from '../components/CallToAction';
 import CommentSection from '../components/CommentSection';
 import PostCard from '../components/PostCard';
+import RouteVisualizer from '../components/RouteVisualizer';
 import { useSocket } from '../context/SocketContext';
 import { Helmet } from 'react-helmet-async';
 import { HiBookmark, HiOutlineBookmark } from 'react-icons/hi';
@@ -219,6 +220,40 @@ export default function PostPage() {
               className='p-3 max-w-2xl mx-auto w-full post-content'
               dangerouslySetInnerHTML={{ __html: post.content }}
             ></div>
+
+            {/* AI Video Walkthrough (if uploaded) */}
+            {post.videoUrl && (
+              <div className='my-8 max-w-4xl mx-auto w-full p-4 bg-slate-900 text-white rounded-3xl shadow-2xl border border-slate-800 overflow-hidden'>
+                <div className='flex items-center justify-between mb-3 px-2'>
+                  <div className='flex items-center gap-2'>
+                    <span className='px-3 py-1 bg-teal-500/20 text-teal-300 font-semibold text-xs rounded-full uppercase tracking-wider'>
+                      🎬 AI Route Walkthrough
+                    </span>
+                    <h3 className='font-bold text-base sm:text-lg text-slate-100'>
+                      Visual Guide: {post.title}
+                    </h3>
+                  </div>
+                  <span className='text-xs text-slate-400'>Official Guide</span>
+                </div>
+                <video
+                  controls
+                  playsInline
+                  poster={post.image}
+                  className='w-full rounded-2xl max-h-[500px] bg-black shadow-inner'
+                >
+                  <source src={post.videoUrl} type='video/mp4' />
+                  Your browser does not support the video tag.
+                </video>
+                <p className='text-xs text-slate-400 mt-2.5 px-2'>
+                  Visual route walkthrough detailing transit options, easiest travel routes, and essential waypoints based on real reviews.
+                </p>
+              </div>
+            )}
+
+            {/* Interactive Route Journey & AI Audio Guide */}
+            <div className='w-full max-w-5xl mx-auto'>
+              <RouteVisualizer post={post} />
+            </div>
 
             {/* Share Section */}
             <div className='max-w-2xl mx-auto w-full p-3 border-t border-slate-500 flex items-center justify-between mt-5'>
