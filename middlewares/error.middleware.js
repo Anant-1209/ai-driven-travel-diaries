@@ -10,8 +10,15 @@ export const errorHandler = (statusCode, message) => {
 
 // Global Error Middleware
 export const globalErrorMiddleware = (err, req, res, next) => {
-  const statusCode = err.statusCode || 500;
-  const message = err.message || 'Internal Server Error';
+  let statusCode = err.statusCode || 500;
+  let message = err.message || 'Internal Server Error';
+
+  // Handle MongoDB duplicate key error (E11000)
+  if (err.code === 11000) {
+    statusCode = 400;
+    const field = Object.keys(err.keyValue || {})[0] || 'field';
+    message = `An account with that ${field} already exists.`;
+  }
 
   // Log the error using Winston
   logger.error(`[${req.method}] ${req.originalUrl} >> StatusCode:: ${statusCode}, Message:: ${message}`);

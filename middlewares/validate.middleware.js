@@ -7,10 +7,15 @@ export const validate = (schema) => (req, res, next) => {
     });
     next();
   } catch (err) {
-    const errorMessages = err.errors.map((e) => e.message).join('. ');
+    const issues = err.issues || err.errors || [];
+    const errorMessages =
+      issues.length > 0
+        ? issues.map((e) => e.message).join('. ')
+        : err.message || 'Invalid input data';
+
     return res.status(400).json({
       success: false,
-      message: errorMessages || 'Invalid input data',
+      message: errorMessages,
     });
   }
 };

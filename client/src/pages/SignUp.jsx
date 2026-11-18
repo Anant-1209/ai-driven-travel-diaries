@@ -64,7 +64,7 @@ export default function SignUp() {
                 onChange={handleChange}
               />
               <p className='text-[10px] text-gray-500 mt-1 italic'>
-                Min 7 chars, lowercase, no spaces.
+                Min 3 chars, lowercase, no spaces.
               </p>
             </div>
             <div>

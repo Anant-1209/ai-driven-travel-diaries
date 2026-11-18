@@ -5,15 +5,37 @@ import { errorHandler } from '../utils/error.js';
 
 export const signupService = async (userData) => {
   const { username, email, password } = userData;
+
+  // Check for duplicate email
+  const existingEmail = await User.findOne({ email: email.toLowerCase() });
+  if (existingEmail) {
+    throw errorHandler(400, 'An account with this email address already exists. Please sign in.');
+  }
+
+  // Check for duplicate username
+  const existingUsername = await User.findOne({ username: username.toLowerCase() });
+  if (existingUsername) {
+    throw errorHandler(400, 'This username is already taken. Please choose another username.');
+  }
+
+  // If this is the very first registered user, automatically grant Admin rights
+  const totalUsers = await User.countDocuments();
+  const isAdmin = totalUsers === 0;
+
   const hashedPassword = bcryptjs.hashSync(password, 10);
-  const newUser = new User({ username, email, password: hashedPassword });
+  const newUser = new User({
+    username: username.toLowerCase(),
+    email: email.toLowerCase(),
+    password: hashedPassword,
+    isAdmin,
+  });
   await newUser.save();
   return newUser;
 };
 
 export const signinService = async (credentials) => {
   const { email, password } = credentials;
-  const validUser = await User.findOne({ email });
+  const validUser = await User.findOne({ email: email.toLowerCase() });
   if (!validUser) throw errorHandler(404, 'User not found');
   
   const validPassword = bcryptjs.compareSync(password, validUser.password);

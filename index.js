@@ -7,6 +7,7 @@ import postRoutes from './routes/post.route.js';
 import commentRoutes from './routes/comment.route.js';
 import aiRoutes from './routes/ai.route.js';
 import messageRoutes from './routes/message.route.js';
+import uploadRoutes from './routes/upload.route.js';
 import cookieParser from 'cookie-parser';
 import path from 'path'; 
 import helmet from 'helmet';
@@ -27,37 +28,43 @@ const port = process.env.PORT || 3000;
 console.log('MONGO_URI:', mongoURI); // This should log your MongoDB URI
 console.log('PORT:', port); // This should log 3000 or the specified port in .env file
 
+// Configure robust connection options for MongoDB Atlas Free Tier (M0) resilience
+const mongooseOptions = {
+  maxPoolSize: 10, // Prevent Atlas M0 500-connection exhaustion
+  minPoolSize: 2,
+  serverSelectionTimeoutMS: 5000, // Fast timeout on network stalls
+  socketTimeoutMS: 45000,
+  family: 4, // IPv4 to avoid DNS delays
+};
+
 mongoose
-  .connect(mongoURI)
+  .connect(mongoURI, mongooseOptions)
   .then(async () => {
-    logger.info('MongoDb is connected');
-    // --- FORCE SEED LOGIC (SUREFIRE FIX) ---
+    logger.info('MongoDB is connected successfully');
     try {
       const Post = (await import('./models/post.model.js')).default;
       const User = (await import('./models/user.model.js')).default;
       
-      const realUser = await User.findOne({});
-      if (!realUser) {
-        logger.warn('⚠️ No users found in DB. Messaging might not work until you sign up.');
+      const postCount = await Post.countDocuments();
+      if (postCount === 0) {
+        logger.info('Database empty on first startup: auto-populating initial destinations...');
+        const realUser = await User.findOne({});
+        const { posts } = await import('./scratch/seed_data_list.js');
+        const initialPosts = posts.map(p => ({
+          ...p,
+          userId: realUser ? realUser._id : p.userId
+        }));
+        await Post.insertMany(initialPosts);
+        logger.info(`✨ Initialized database with ${initialPosts.length} destinations.`);
+      } else {
+        logger.info(`Database ready with ${postCount} existing destinations.`);
       }
-
-      logger.info('🚀 FORCE SEEDING: Wiping database and injecting 24 destinations...');
-      const { posts } = await import('./scratch/seed_data_list.js'); 
-      
-      const updatedPosts = posts.map(p => ({
-        ...p,
-        userId: realUser ? realUser._id : p.userId // Use real user if found
-      }));
-
-      await Post.deleteMany({});
-      await Post.insertMany(updatedPosts);
-      logger.info('✨ SUCCESS: 24 destinations are now 100% in your database.');
     } catch (seedErr) {
-      logger.error('Auto-seed failed:', seedErr.message);
+      logger.error('Startup check failed:', seedErr.message);
     }
   })
   .catch((err) => {
-    logger.error(`MongoDb connection error: ${err}`);
+    logger.error(`MongoDB connection error: ${err}`);
   });
 
 const __dirname = path.resolve();
@@ -94,6 +101,10 @@ app.use('/api/post', postRoutes);
 app.use('/api/comment', commentRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/message', messageRoutes);
+app.use('/api/upload', uploadRoutes);
+
+// Serve self-hosted user and destination media
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Serve frontend files from the build directory
 app.get("/", (req, res) => {
@@ -109,3 +120,15 @@ app.get('*', (req, res) => {
 
 // Use global error middleware instead of inline
 app.use(globalErrorMiddleware);
+
+// Process-level crash prevention under live traffic
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  // Keep server alive, never let an async rejection take down production
+});
+
+process.on('uncaughtException', (err) => {
+  logger.error('Uncaught Exception thrown:', err.message, err.stack);
+  // Log critical error without crashing instantly if recoverable
+});
+
