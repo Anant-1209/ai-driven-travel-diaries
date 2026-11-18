@@ -34,9 +34,17 @@ export const getPostsService = async (query) => {
       $or: [
         { title: { $regex: query.searchTerm, $options: 'i' } },
         { content: { $regex: query.searchTerm, $options: 'i' } },
-        // PERMISSIVE: match any word
-        ...searchWords.map(word => ({ title: { $regex: word, $options: 'i' } })),
-        ...searchWords.map(word => ({ content: { $regex: word, $options: 'i' } })),
+        { slug: { $regex: query.searchTerm, $options: 'i' } },
+        { state: { $regex: query.searchTerm, $options: 'i' } },
+        { category: { $regex: query.searchTerm, $options: 'i' } },
+        { highlights: { $elemMatch: { $regex: query.searchTerm, $options: 'i' } } },
+        // Match individual keywords
+        ...searchWords.flatMap(word => [
+          { title: { $regex: word, $options: 'i' } },
+          { content: { $regex: word, $options: 'i' } },
+          { slug: { $regex: word, $options: 'i' } },
+          { state: { $regex: word, $options: 'i' } },
+        ]),
       ],
     }),
   })

@@ -4,6 +4,8 @@ import {
   summarizeBlogService,
   generateTagsService,
   chatAssistantService,
+  getTransitGuideService,
+  discoverPlaceService,
 } from '../services/ai.service.js';
 
 export const planItinerary = async (req, res, next) => {
@@ -50,6 +52,30 @@ export const chatWithAssistant = async (req, res, next) => {
     
     const reply = await chatAssistantService(message);
     res.status(200).json({ reply });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getTransitGuide = async (req, res, next) => {
+  try {
+    const { origin, destination, destinationState } = req.body;
+    if (!destination) return next(errorHandler(400, 'Destination is required'));
+    
+    const transit = await getTransitGuideService({ origin, destination, destinationState });
+    res.status(200).json({ success: true, transit });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const discoverPlace = async (req, res, next) => {
+  try {
+    const { placeName } = req.body;
+    if (!placeName) return next(errorHandler(400, 'placeName is required'));
+    
+    const result = await discoverPlaceService({ placeName });
+    res.status(200).json({ success: true, ...result });
   } catch (error) {
     next(error);
   }
