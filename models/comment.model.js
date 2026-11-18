@@ -22,6 +22,28 @@ const commentSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    rating: {
+      type: Number,
+      default: 5,
+      min: 1,
+      max: 5,
+    },
+    tripType: {
+      type: String,
+      default: 'Explorer', // 'Family Trip', 'Solo Traveler', 'Couple Getaway', 'Friends Group'
+    },
+    isWorthIt: {
+      type: String,
+      default: 'Worth It!', // 'Worth It!', 'Must Visit', 'Overrated', 'Good with Precautions'
+    },
+    photoUrl: {
+      type: String,
+      default: null,
+    },
+    visitDate: {
+      type: String,
+      default: 'Recently Visited',
+    },
   },
   { timestamps: true }
 );

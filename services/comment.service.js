@@ -15,6 +15,11 @@ export const createCommentService = async (commentData) => {
     content: commentData.content,
     postId: commentData.postId,
     userId: commentData.userId,
+    rating: Number(commentData.rating) || 5,
+    tripType: commentData.tripType || 'Family Trip',
+    isWorthIt: commentData.isWorthIt || 'Worth It!',
+    photoUrl: commentData.photoUrl || null,
+    visitDate: commentData.visitDate || 'Recently Visited',
   });
   await newComment.save();
   console.log(`[DEBUG] Comment saved to DB: ${newComment._id} for Post: ${commentData.postId}`);
@@ -27,8 +32,7 @@ export const createCommentService = async (commentData) => {
     }
     const post = await Post.findById(commentData.postId);
     if (post) {
-      // Professional Notification: Using the actual username
-      const senderName = req.user.username || 'A traveler';
+      const senderName = commentData.username || 'A traveler';
       notifyUser(post.userId, 'notification', { 
         message: `${senderName} just commented on your travel story! ✍️`, 
         postId: post._id,

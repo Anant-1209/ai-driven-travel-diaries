@@ -14,6 +14,11 @@ export default function CommentSection({ postId }) {
   const [showModal, setShowModal] = useState(false);
   const [commentToDelete, setCommentToDelete] = useState(null);
   const [typingUser, setTypingUser] = useState(null);
+  const [rating, setRating] = useState(5);
+  const [tripType, setTripType] = useState('Family Trip');
+  const [isWorthIt, setIsWorthIt] = useState('Worth It!');
+  const [photoUrl, setPhotoUrl] = useState('');
+  const [showPhotoInput, setShowPhotoInput] = useState(false);
   const navigate = useNavigate();
   const socket = useSocket();
 
@@ -60,11 +65,18 @@ export default function CommentSection({ postId }) {
           content: comment,
           postId,
           userId: currentUser._id,
+          username: currentUser.username,
+          rating,
+          tripType,
+          isWorthIt,
+          photoUrl: photoUrl.trim() || null,
         }),
       });
       const data = await res.json();
       if (res.ok) {
         setComment('');
+        setPhotoUrl('');
+        setShowPhotoInput(false);
         setCommentError(null);
         // We now rely 100% on the socket event to add the comment to the list. 
         // This prevents double comments and ensures everyone sees it at the same time.
@@ -188,10 +200,57 @@ export default function CommentSection({ postId }) {
       {currentUser && (
         <form
           onSubmit={handleSubmit}
-          className='border border-teal-500 rounded-md p-3'
+          className='border border-teal-500/50 dark:border-teal-500/30 rounded-2xl p-4 sm:p-5 bg-white dark:bg-slate-800 shadow-sm space-y-4'
         >
+          <div className='flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-700 pb-3'>
+            <div>
+              <span className='text-xs font-bold uppercase tracking-wider text-teal-600 dark:text-teal-400 block mb-1'>
+                Rate Your Experience
+              </span>
+              <div className='flex items-center gap-1.5'>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type='button'
+                    onClick={() => setRating(star)}
+                    className={`text-xl transition-transform hover:scale-125 ${
+                      star <= rating ? 'text-amber-400' : 'text-slate-300 dark:text-slate-600'
+                    }`}
+                  >
+                    ★
+                  </button>
+                ))}
+                <span className='text-xs font-semibold text-slate-500 ml-1'>({rating}/5)</span>
+              </div>
+            </div>
+
+            <div className='flex flex-wrap gap-2'>
+              <select
+                value={tripType}
+                onChange={(e) => setTripType(e.target.value)}
+                className='text-xs font-semibold py-1.5 px-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-slate-200'
+              >
+                <option value='Family Trip'>👨‍👩‍👧 Family Trip</option>
+                <option value='Solo Traveler'>🎒 Solo Traveler</option>
+                <option value='Couple Getaway'>💑 Couple Getaway</option>
+                <option value='Friends Group'>👥 Friends Group</option>
+              </select>
+
+              <select
+                value={isWorthIt}
+                onChange={(e) => setIsWorthIt(e.target.value)}
+                className='text-xs font-bold py-1.5 px-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-slate-200'
+              >
+                <option value='Worth It!'>🟢 Worth It!</option>
+                <option value='Must Visit'>⭐️ Must Visit</option>
+                <option value='Good with Precautions'>🟡 Good with Precautions</option>
+                <option value='Overrated'>🔴 Overrated</option>
+              </select>
+            </div>
+          </div>
+
           <Textarea
-            placeholder='Add a comment...'
+            placeholder='Share your real, honest experience, current conditions, best time to arrive, or tips for other travelers...'
             rows='3'
             maxLength='200'
             onChange={handleTyping}
@@ -199,17 +258,46 @@ export default function CommentSection({ postId }) {
             onBlur={() => {
               if (socket) socket.emit('stopTyping', { postId });
             }}
+            className='text-sm'
           />
-          <div className='flex justify-between items-center mt-5'>
+
+          {showPhotoInput ? (
+            <div className='flex items-center gap-2'>
+              <TextInput
+                type='url'
+                placeholder='Paste a link to your real photo (e.g. imgur, google drive, unsplash)...'
+                value={photoUrl}
+                onChange={(e) => setPhotoUrl(e.target.value)}
+                className='flex-1 text-xs'
+              />
+              <button
+                type='button'
+                onClick={() => setShowPhotoInput(false)}
+                className='text-xs text-slate-400 hover:text-slate-600'
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button
+              type='button'
+              onClick={() => setShowPhotoInput(true)}
+              className='text-xs text-teal-600 dark:text-teal-400 font-semibold hover:underline flex items-center gap-1'
+            >
+              📷 Add Real On-The-Ground Photo URL
+            </button>
+          )}
+
+          <div className='flex justify-between items-center pt-2'>
             <p className='text-gray-500 text-xs'>
               {200 - comment.length} characters remaining
             </p>
             <Button outline gradientDuoTone='purpleToBlue' type='submit'>
-              Submit
+              Post Traveler Review
             </Button>
           </div>
           {commentError && (
-            <Alert color='failure' className='mt-5'>
+            <Alert color='failure' className='mt-2'>
               {commentError}
             </Alert>
           )}
