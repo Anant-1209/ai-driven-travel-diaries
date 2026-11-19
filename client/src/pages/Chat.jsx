@@ -22,45 +22,50 @@ export default function Chat() {
   }, [messages]);
 
   // Fetch Conversations & Handle Deep Link
-  useEffect(() => {
-    const fetchConversations = async () => {
-      try {
-        const res = await fetch('/api/message/conversations');
-        const data = await res.json();
-        if (res.ok) {
-            setConversations(data);
-            
-            // Check for userId in URL
-            const searchParams = new URLSearchParams(location.search);
-            const targetUserId = searchParams.get('userId');
-            if (targetUserId) {
-                // Check if conversation already exists
-                const existing = data.find(c => c.participants[0]._id === targetUserId);
-                if (existing) setActiveChat(existing);
-                else {
-                    // Start a temporary conversation UI
-                    // (The real conversation is created on the first message)
-                    try {
-                        const userRes = await fetch(`/api/user/${targetUserId}`);
-                        const userData = await userRes.json();
-                        if (userRes.ok) {
-                            setActiveChat({
-                                participants: [userData],
-                                _id: 'temp', // Flag for temporary chat
-                            });
-                        }
-                    } catch (err) { console.log(err); }
-                }
-            }
+  const fetchConversations = async () => {
+    try {
+      const res = await fetch('/api/message/conversations');
+      const data = await res.json();
+      if (res.ok) {
+        setConversations(data);
+        
+        // Check for userId in URL
+        const searchParams = new URLSearchParams(location.search);
+        const targetUserId = searchParams.get('userId');
+        if (targetUserId) {
+          // Check if conversation already exists
+          const existing = data.find(c => c.participants.some(p => p._id === targetUserId));
+          if (existing) {
+            setActiveChat(existing);
+          } else {
+            // Start a temporary conversation UI
+            // (The real conversation is created on the first message)
+            try {
+              const userRes = await fetch(`/api/user/${targetUserId}`);
+              const userData = await userRes.json();
+              if (userRes.ok) {
+                setActiveChat({
+                  participants: [userData],
+                  _id: 'temp', // Flag for temporary chat
+                });
+              }
+            } catch (err) { console.log(err); }
+          }
+        } else if (data.length > 0 && !activeChat) {
+          // Default to the first conversation if none is selected
+          setActiveChat(data[0]);
         }
-      } catch (err) { console.log(err); }
-    };
+      }
+    } catch (err) { console.log(err); }
+  };
+
+  useEffect(() => {
     fetchConversations();
   }, [location.search]);
 
   // Fetch Messages for Active Chat
   useEffect(() => {
-    if (!activeChat) return;
+    if (!activeChat || !activeChat.participants?.[0]?._id) return;
     const fetchMessages = async () => {
       setLoading(true);
       try {
@@ -77,19 +82,26 @@ export default function Chat() {
   useEffect(() => {
     if (socket) {
       socket.on('newMessage', (msg) => {
-        if (activeChat && (msg.senderId === activeChat.participants[0]._id || msg.receiverId === activeChat.participants[0]._id)) {
+        if (activeChat && activeChat.participants?.[0] && (msg.senderId === activeChat.participants[0]._id || msg.receiverId === activeChat.participants[0]._id)) {
           setMessages((prev) => {
             if (prev.find((m) => m._id === msg._id)) return prev;
             return [...prev, msg];
           });
         }
-        // Update last message in sidebar
-        setConversations((prev) => prev.map(c => {
-            if (c.participants[0]._id === msg.senderId || c.participants[0]._id === msg.receiverId) {
-                return { ...c, lastMessage: { text: msg.text, senderId: msg.senderId } };
+        // Update last message in sidebar or refresh if brand new
+        setConversations((prev) => {
+          const match = prev.find(c => c.participants.some(p => p._id === msg.senderId || p._id === msg.receiverId));
+          if (!match) {
+            fetchConversations();
+            return prev;
+          }
+          return prev.map(c => {
+            if (c.participants.some(p => p._id === msg.senderId || p._id === msg.receiverId)) {
+              return { ...c, lastMessage: { text: msg.text, senderId: msg.senderId } };
             }
             return c;
-        }));
+          });
+        });
       });
       return () => socket.off('newMessage');
     }
@@ -97,7 +109,7 @@ export default function Chat() {
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || !activeChat) return;
+    if (!newMessage.trim() || !activeChat || !activeChat.participants?.[0]?._id) return;
 
     try {
       const res = await fetch(`/api/message/send/${activeChat.participants[0]._id}`, {
@@ -109,6 +121,16 @@ export default function Chat() {
       if (res.ok) {
         setMessages((prev) => [...prev, data]);
         setNewMessage('');
+        if (activeChat._id === 'temp') {
+          fetchConversations();
+        } else {
+          setConversations((prev) => prev.map(c => {
+            if (c._id === activeChat._id) {
+              return { ...c, lastMessage: { text: data.text, senderId: data.senderId } };
+            }
+            return c;
+          }));
+        }
       }
     } catch (err) { console.log(err); }
   };

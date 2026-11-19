@@ -1,5 +1,6 @@
 import Conversation from '../models/conversation.model.js';
 import Message from '../models/message.model.js';
+import User from '../models/user.model.js';
 import { getIo, notifyUser } from '../socket/socketHandler.js';
 
 export const sendMessage = async (req, res, next) => {
@@ -37,10 +38,14 @@ export const sendMessage = async (req, res, next) => {
     // Real-time: Send message to receiver via Socket
     notifyUser(receiverId, 'newMessage', newMessage);
     
-    // Notification: Alert receiver
+    // Notification: Alert receiver with actual sender username & direct chat link
+    const sender = await User.findById(senderId).select('username profilePicture').lean();
+    const senderName = sender?.username || req.user.username || 'A traveler';
     notifyUser(receiverId, 'notification', { 
-      message: `New message from ${req.user.username || 'User'}`, 
-      type: 'MESSAGE' 
+      message: `New message from ${senderName}`, 
+      type: 'MESSAGE',
+      senderId,
+      url: `/chat?userId=${senderId}`,
     });
 
     res.status(201).json(newMessage);
@@ -75,12 +80,12 @@ export const getConversations = async (req, res, next) => {
     const userId = req.user.id;
     const conversations = await Conversation.find({
         participants: { $in: [userId] }
-    }).populate('participants', 'username profilePicture').sort({ updatedAt: -1 });
+    }).populate('participants', 'username profilePicture').sort({ updatedAt: -1 }).lean();
 
     // Filter out the current user from the participants list for easier frontend use
     // If it's a self-chat, we keep one participant (themselves)
     const filteredConversations = conversations.map(conv => {
-        const otherParticipants = conv.participants.filter(p => p._id.toString() !== userId);
+        const otherParticipants = (conv.participants || []).filter(p => p._id.toString() !== userId);
         conv.participants = otherParticipants.length > 0 ? otherParticipants : conv.participants;
         return conv;
     });

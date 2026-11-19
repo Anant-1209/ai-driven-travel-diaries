@@ -7,6 +7,7 @@ import {
   HiAnnotation,
   HiChartPie,
   HiBookmark,
+  HiChat,
 } from 'react-icons/hi';
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
@@ -74,6 +75,14 @@ export default function DashSidebar() {
               as='div'
             >
               Saved Diaries
+            </Sidebar.Item>
+          </Link>
+          <Link to='/chat'>
+            <Sidebar.Item
+              icon={HiChat}
+              as='div'
+            >
+              Direct Messages
             </Sidebar.Item>
           </Link>
           {currentUser.isAdmin && (

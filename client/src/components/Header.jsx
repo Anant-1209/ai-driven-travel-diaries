@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AiOutlineSearch } from 'react-icons/ai';
 import { FaMoon, FaSun } from 'react-icons/fa';
-import { HiBell, HiChevronDown, HiMenu, HiX } from 'react-icons/hi';
+import { HiBell, HiChevronDown, HiMenu, HiX, HiChat } from 'react-icons/hi';
 import { useSelector, useDispatch } from 'react-redux';
 import { toggleTheme } from '../redux/theme/themeSlice';
 import { signoutSuccess } from '../redux/user/userSlice';
@@ -207,6 +207,18 @@ export default function Header() {
               {theme === 'light' ? <FaSun className='h-4 w-4' /> : <FaMoon className='h-4 w-4' />}
             </button>
 
+            {/* Direct Messages / Chat */}
+            {currentUser && (
+              <Link
+                to='/chat'
+                className='p-2 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors'
+                title='Traveler Messages & Chat'
+                aria-label='Traveler Messages & Chat'
+              >
+                <HiChat className='h-5 w-5' />
+              </Link>
+            )}
+
             {/* Notifications */}
             {currentUser && (
               <Dropdown
@@ -229,7 +241,12 @@ export default function Header() {
                 ) : (
                   notifications.map((notif, idx) => (
                     <Dropdown.Item key={idx}>
-                      <Link to={`/post/${notif.postId}`}>{notif.message}</Link>
+                      <Link 
+                        to={(notif.type === 'MESSAGE' || notif.message?.includes('message')) ? (notif.url || '/chat') : (notif.postSlug ? `/post/${notif.postSlug}` : notif.postId ? `/post/${notif.postId}` : '/')}
+                        className='w-full block'
+                      >
+                        {notif.message}
+                      </Link>
                     </Dropdown.Item>
                   ))
                 )}
@@ -257,6 +274,9 @@ export default function Header() {
                 </Dropdown.Header>
                 <Link to='/dashboard?tab=profile'>
                   <Dropdown.Item>Profile</Dropdown.Item>
+                </Link>
+                <Link to='/chat'>
+                  <Dropdown.Item>Messages / Chat 💬</Dropdown.Item>
                 </Link>
                 <Dropdown.Divider />
                 <Dropdown.Item onClick={handleSignout}>Sign out</Dropdown.Item>

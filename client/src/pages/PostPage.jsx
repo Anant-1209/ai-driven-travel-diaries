@@ -168,7 +168,7 @@ export default function PostPage() {
                     {isSaved ? <HiBookmark className='w-6 h-6 text-teal-500' /> : <HiOutlineBookmark className='w-6 h-6' />}
                     <span className='text-sm font-medium'>{isSaved ? 'Saved' : 'Save'}</span>
                   </button>
-                  {post.userId && (
+                  {post.userId && post.userId !== currentUser._id && (
                     <Link to={`/chat?userId=${post.userId}`}>
                       <Button size='xs' outline gradientDuoTone='purpleToBlue'>
                         Message Author
