@@ -278,11 +278,19 @@ export default function PostPage() {
                 </Button>
                 <Button 
                   size='xs' 
+                  color='success' 
+                  outline
+                  onClick={() => window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`Check out this travel guide for ${post.title}: ${window.location.href}`)}`, '_blank')}
+                >
+                  WhatsApp
+                </Button>
+                <Button 
+                  size='xs' 
                   color='blue' 
                   outline
-                  onClick={() => window.open(`https://twitter.com/intent/tweet?text=Check out this travel diary: ${post.title}&url=${window.location.href}`, '_blank')}
+                  onClick={() => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out this travel diary: ${post.title}`)}&url=${encodeURIComponent(window.location.href)}`, '_blank')}
                 >
-                  Twitter
+                  Twitter / X
                 </Button>
               </div>
             </div>

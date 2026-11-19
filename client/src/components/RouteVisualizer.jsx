@@ -38,6 +38,7 @@ import {
   FaPrint,
   FaCompass,
   FaHotel,
+  FaTwitter,
 } from 'react-icons/fa';
 
 // Fix default Leaflet icon paths in Vite
@@ -956,7 +957,7 @@ export default function RouteVisualizer({ post }) {
   const totalTickets = ticketsMiscPerDay * calcTravelers * calcDays;
   const adjustedTotal = totalHotel + totalFood + totalTransit + totalTickets;
 
-  const handleCopyWhatsApp = () => {
+  const handleShareWhatsApp = () => {
     const text = `*Trip Plan & Budget for ${post.title}*
 📍 Destination: ${post.title} (${post.state || 'India'})
 👥 Travelers: ${calcTravelers} Person(s) | 📅 Duration: ${calcDays} Days
@@ -972,13 +973,309 @@ export default function RouteVisualizer({ post }) {
 🗓️ Best Season: ${post.bestSeason || 'October to March'}
 View full itinerary at: ${window.location.href}`;
 
+    // Direct 1-Click WhatsApp Open
+    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+    window.open(whatsappUrl, '_blank');
+
     navigator.clipboard.writeText(text);
     setCopiedShare(true);
     setTimeout(() => setCopiedShare(false), 2500);
   };
 
+  const handleShareTwitter = () => {
+    const tweetText = `Planning a trip to ${post.title}! Estimated budget ₹${adjustedTotal.toLocaleString('en-IN')} for ${calcDays} days. Check out the verified itinerary on Travel Diaries:`;
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(window.location.href)}`;
+    window.open(twitterUrl, '_blank');
+  };
+
   const handlePrintPocketGuide = () => {
-    window.print();
+    const printWindow = window.open('', '_blank', 'width=900,height=1100');
+    if (!printWindow) {
+      alert('Please allow pop-ups in your browser to download the PDF guide.');
+      return;
+    }
+
+    const title = post.title || 'Travel Guide';
+    const state = post.state || 'India';
+    const season = post.bestSeason || 'October to March';
+    const railway = post.nearestHubs?.railway || 'Major Railway Station';
+    const airport = post.nearestHubs?.airport || 'Nearest Domestic/International Airport';
+
+    const itineraryHtml = (waypoints || []).map((wp, i) => `
+      <div style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 10px; margin-bottom: 6px; page-break-inside: avoid; background: #ffffff;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+          <div>
+            <span style="background: #0d9488; color: white; font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 4px; text-transform: uppercase;">Day ${wp.day || 1} • Stop ${i + 1}</span>
+            <strong style="font-size: 12px; color: #0f172a; margin-left: 6px;">${wp.name || 'Waypoint'}</strong>
+          </div>
+          <span style="color: #64748b; font-size: 10px;">⏰ ${wp.timing || 'Flexible'}</span>
+        </div>
+        <div style="font-size: 10px; color: #475569; display: flex; gap: 16px;">
+          <span><strong>Transit:</strong> ${wp.transport || 'Local Auto / Cab'}</span>
+          <span><strong>Est. Ticket:</strong> ₹${wp.ticketINR || 0}</span>
+        </div>
+        ${wp.notes ? `<p style="font-size: 10px; color: #64748b; margin-top: 4px; font-style: italic;">${wp.notes}</p>` : ''}
+      </div>
+    `).join('');
+
+    const placesHtml = (allAttractions || []).map((p, idx) => `
+      <tr>
+        <td style="border: 1px solid #cbd5e1; padding: 6px 8px; vertical-align: top;">
+          <strong>${idx + 1}. ${p.name}</strong><br>
+          <span style="color: #64748b; font-size: 9px; text-transform: uppercase;">${p.category || 'Sightseeing'}</span>
+        </td>
+        <td style="border: 1px solid #cbd5e1; padding: 6px 8px; vertical-align: top;">${p.timing || 'Regular Hours'}</td>
+        <td style="border: 1px solid #cbd5e1; padding: 6px 8px; vertical-align: top;">${p.entryFee || 'Free'}</td>
+        <td style="border: 1px solid #cbd5e1; padding: 6px 8px; vertical-align: top;">${p.visitDuration || '1 - 2 hrs'}</td>
+        <td style="border: 1px solid #cbd5e1; padding: 6px 8px; vertical-align: top; font-size: 10px; color: #334155;">${p.insiderTip || p.isWorthIt || 'Must visit.'}</td>
+      </tr>
+    `).join('');
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <title>${title} - Clean Offline Travel Guide</title>
+        <style>
+          @page {
+            size: A4 portrait;
+            margin: 12mm 14mm;
+          }
+          * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+          }
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #1e293b;
+            background: #ffffff;
+            line-height: 1.45;
+            font-size: 11.5px;
+            padding: 16px;
+          }
+          .header {
+            border-bottom: 2px solid #0d9488;
+            padding-bottom: 10px;
+            margin-bottom: 14px;
+          }
+          .brand {
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #0d9488;
+          }
+          .title {
+            font-size: 20px;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 4px 0 6px 0;
+          }
+          .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+          }
+          .meta-item strong {
+            display: block;
+            color: #64748b;
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+          .section-title {
+            font-size: 12.5px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #0d9488;
+            border-left: 3px solid #0d9488;
+            padding-left: 8px;
+            margin: 16px 0 8px 0;
+          }
+          .budget-box {
+            background: #f0fdfa;
+            border: 1px solid #99f6e4;
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 12px;
+          }
+          .budget-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            text-align: center;
+          }
+          .budget-item .label {
+            font-size: 9px;
+            color: #0f766e;
+            text-transform: uppercase;
+            font-weight: 700;
+          }
+          .budget-item .val {
+            font-size: 12.5px;
+            font-weight: 800;
+            color: #115e59;
+            margin-top: 2px;
+          }
+          .budget-item.total .val {
+            font-size: 14px;
+            color: #042f2e;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10.5px;
+            margin-bottom: 12px;
+            page-break-inside: avoid;
+          }
+          th {
+            background: #f1f5f9;
+            font-weight: 700;
+            color: #334155;
+            text-transform: uppercase;
+            font-size: 9px;
+            border: 1px solid #cbd5e1;
+            padding: 6px 8px;
+            text-align: left;
+          }
+          tr:nth-child(even) {
+            background: #f8fafc;
+          }
+          .tips-box {
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 10.5px;
+            color: #92400e;
+            margin-top: 10px;
+            page-break-inside: avoid;
+          }
+          .helpline-box {
+            display: flex;
+            justify-content: space-between;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-top: 12px;
+            font-size: 9.5px;
+            color: #475569;
+            page-break-inside: avoid;
+          }
+          .helpline-item strong {
+            color: #0d9488;
+          }
+          .footer {
+            margin-top: 14px;
+            padding-top: 8px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 9px;
+            color: #94a3b8;
+            display: flex;
+            justify-content: space-between;
+          }
+          @media print {
+            body {
+              padding: 0;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="brand">Travel Diaries &bull; Verified Offline Travel Guide</div>
+          <h1 class="title">${title}</h1>
+          <div class="meta-grid">
+            <div class="meta-item"><strong>State / Region</strong>${state}</div>
+            <div class="meta-item"><strong>Best Season</strong>${season}</div>
+            <div class="meta-item"><strong>Nearest Station</strong>${railway}</div>
+            <div class="meta-item"><strong>Nearest Airport</strong>${airport}</div>
+          </div>
+        </div>
+
+        <div class="budget-box">
+          <div class="budget-grid">
+            <div class="budget-item">
+              <div class="label">Duration & Group</div>
+              <div class="val">${calcDays} Days • ${calcTravelers} Pax</div>
+            </div>
+            <div class="budget-item">
+              <div class="label">Stay / Hotels</div>
+              <div class="val">₹${totalHotel.toLocaleString('en-IN')}</div>
+            </div>
+            <div class="budget-item">
+              <div class="label">Food & Meals</div>
+              <div class="val">₹${totalFood.toLocaleString('en-IN')}</div>
+            </div>
+            <div class="budget-item">
+              <div class="label">Local Travel & Tickets</div>
+              <div class="val">₹${(totalTransit + totalTickets).toLocaleString('en-IN')}</div>
+            </div>
+            <div class="budget-item total">
+              <div class="label">Estimated Total</div>
+              <div class="val">₹${adjustedTotal.toLocaleString('en-IN')}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title">📅 Recommended Day-by-Day Journey Itinerary</div>
+        ${itineraryHtml}
+
+        <div class="section-title">📍 Must-Visit Places Directory (${allAttractions.length} Attractions)</div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 26%;">Place Name</th>
+              <th style="width: 17%;">Timings</th>
+              <th style="width: 17%;">Entry Fee</th>
+              <th style="width: 14%;">Duration</th>
+              <th style="width: 26%;">Insider Tip / Local Advice</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${placesHtml}
+          </tbody>
+        </table>
+
+        <div class="tips-box">
+          <strong style="color: #78350f;">⚠️ Ground Reality & Important Travel Advice:</strong>
+          <ul style="margin-left: 16px; margin-top: 4px;">
+            <li>Book trains and popular entry tickets 1–2 months in advance for peak season (${season}).</li>
+            <li>Negotiate auto/taxi fares beforehand or prefer prepaid / app-based cabs at railway hubs.</li>
+            <li>Carry government-issued photo ID proofs (Aadhaar / Voter ID / Passport) for all passengers.</li>
+            <li>Keep moderate cash handy; small vendors and rural transport often experience UPI network connectivity drops.</li>
+          </ul>
+        </div>
+
+        <div class="helpline-box">
+          <div class="helpline-item"><strong>Tourist Helpline:</strong> 1363</div>
+          <div class="helpline-item"><strong>Railway Helpline:</strong> 139</div>
+          <div class="helpline-item"><strong>Emergency (Police/Medical):</strong> 112</div>
+          <div class="helpline-item"><strong>Women Helpline:</strong> 1090</div>
+        </div>
+
+        <div class="footer">
+          <span>Generated by Travel Diaries Platform &bull; Keep India Clean & Travel Responsibly</span>
+          <span>Printed on ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+        </div>
+      </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+    }, 450);
   };
 
   if (!waypoints || waypoints.length === 0) {
@@ -1714,15 +2011,24 @@ View full itinerary at: ${window.location.href}`;
               <button
                 onClick={handlePrintPocketGuide}
                 className='flex items-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs uppercase tracking-wider shadow transition-all'
+                title='Save clean PDF / Print Itinerary'
               >
-                <FaPrint className='w-3.5 h-3.5' /> Download / Print Guide
+                <FaPrint className='w-3.5 h-3.5' /> Download / Print PDF Guide
               </button>
               <button
-                onClick={handleCopyWhatsApp}
+                onClick={handleShareWhatsApp}
                 className='flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs uppercase tracking-wider shadow transition-all'
+                title='1-Click Share on WhatsApp'
               >
-                {copiedShare ? <HiCheck className='w-4 h-4' /> : <FaWhatsapp className='w-4 h-4' />}
-                {copiedShare ? 'Plan Copied!' : 'Share Plan on WhatsApp'}
+                <FaWhatsapp className='w-4 h-4' />
+                {copiedShare ? 'WhatsApp Opened!' : 'Share on WhatsApp'}
+              </button>
+              <button
+                onClick={handleShareTwitter}
+                className='flex items-center gap-2 px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-xl text-xs uppercase tracking-wider shadow transition-all'
+                title='1-Click Share on Twitter / X'
+              >
+                <FaTwitter className='w-3.5 h-3.5' /> Share on Twitter / X
               </button>
             </div>
           </div>
