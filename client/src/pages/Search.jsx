@@ -120,6 +120,8 @@ export default function Search() {
       const data = await res.json();
       if (res.ok && data.post?.slug) {
         navigate(`/post/${data.post.slug}`);
+      } else if (res.status === 401) {
+        setDiscoveryError('Please sign in to discover and add a new place.');
       } else {
         setDiscoveryError(data.message || 'Could not discover this place. Please try another name.');
       }

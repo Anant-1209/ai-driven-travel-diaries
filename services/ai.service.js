@@ -5,6 +5,7 @@ import NodeCache from 'node-cache';
 import Post from '../models/post.model.js';
 import User from '../models/user.model.js';
 import { errorHandler } from '../utils/error.js';
+import { escapeRegex, plainTextToHtml } from '../utils/sanitize.js';
 
 // Cache responses for 1 hour to prevent redundant AI calls
 const aiCache = new NodeCache({ stdTTL: 3600, checkperiod: 600 });
@@ -177,7 +178,9 @@ const generateWithXAI = async (prompt) => {
   }
 };
 
-// ===== UNIFIED GENERATOR (Gemini -> Groq -> xAI -> Local Deterministic Fallback) =====
+// ===== UNIFIED GENERATOR (Gemini -> Groq -> xAI) =====
+export const AI_UNAVAILABLE_MESSAGE = 'Our AI assistant is busy right now. Please try again in a minute.';
+
 const generate = async (prompt) => {
   // 1. Try Gemini (Primary)
   try {
@@ -203,10 +206,7 @@ const generate = async (prompt) => {
     console.error('xAI Provider Error:', e.message);
   }
 
-  // 4. Safe offline travel advisor fallback (guarantees zero downtime)
-  return sanitizeDignifiedLanguage(
-    `### Essential Travel Advice\n\n• **Transit:** Take direct trains to the nearest junction or government state buses to save on fares.\n• **Stay:** Clean family homestays and budget hotels are available near the main market for ₹1,200 to ₹2,500/night.\n• **Food:** Enjoy hot local thalis, street snacks, and freshly prepared meals at busy local eateries.\n• **Timing:** Start your sightseeing by 8:30 AM to beat the mid-day heat and tourist queues.`
-  );
+  throw errorHandler(503, AI_UNAVAILABLE_MESSAGE);
 };
 
 // ===== STRUCTURED JSON GENERATOR =====
@@ -293,351 +293,6 @@ export const checkToxicityService = async (text) => {
   }
 };
 
-// ===== DETERMINISTIC RAILWAY CORRIDOR ENGINE (Zero Failure Guarantee) =====
-const getDeterministicTransit = (fromCity, toCity) => {
-  const origin = fromCity.toLowerCase();
-  const dest = toCity.toLowerCase();
-
-  // Corridor A: Pune / Maharashtra -> Jhansi / Baruasagar / Gwalior / Agra / Delhi / UP / MP
-  if (
-    origin.includes('pune') &&
-    (dest.includes('jhansi') ||
-      dest.includes('baruasagar') ||
-      dest.includes('gwalior') ||
-      dest.includes('delhi') ||
-      dest.includes('varanasi') ||
-      dest.includes('agra') ||
-      dest.includes('orcha') ||
-      dest.includes('khajuraho'))
-  ) {
-    return {
-      summary: `Travel from ${fromCity} to ${toCity} is most comfortably done via direct Indian Railways Superfast express trains (like the iconic Goa Express or Jhelum Express) terminating or halting at Jhansi Junction (VGLJ).`,
-      trains: [
-        {
-          trainName: 'Goa Express',
-          trainNumber: '12779',
-          departureStation: 'Pune Junction (PUNE)',
-          arrivalStation: `${toCity} / Jhansi Junction (VGLJ)`,
-          duration: '18-19 hrs',
-          sleeperFare: 620,
-          ac3Fare: 1650,
-          ac2Fare: 2380,
-          frequency: 'Runs Daily',
-          advice:
-            'Iconic daily superfast train with pantry car serving hot meals. Highly punctual and preferred for comfortable family travel.',
-        },
-        {
-          trainName: 'Jhelum Express',
-          trainNumber: '11077',
-          departureStation: 'Pune Junction (PUNE)',
-          arrivalStation: `${toCity} / Jhansi Junction (VGLJ)`,
-          duration: '20-21 hrs',
-          sleeperFare: 620,
-          ac3Fare: 1650,
-          ac2Fare: 2380,
-          frequency: 'Runs Daily',
-          advice:
-            'Reliable overnight daily train with smooth connections. Book 30-60 days ahead for confirmed AC berths.',
-        },
-        {
-          trainName: 'Pune - Gwalior Express',
-          trainNumber: '11101',
-          departureStation: 'Pune Junction (PUNE)',
-          arrivalStation: `${toCity} / Jhansi Junction (VGLJ)`,
-          duration: '18-19 hrs',
-          sleeperFare: 600,
-          ac3Fare: 1600,
-          ac2Fare: 2300,
-          frequency: 'Bi-weekly (Sun, Mon)',
-          advice:
-            'A faster direct option with fewer halts between Maharashtra and Central India.',
-        },
-        {
-          trainName: 'Pune - Gorakhpur Express',
-          trainNumber: '11037',
-          departureStation: 'Pune Junction (PUNE)',
-          arrivalStation: `${toCity} / Jhansi Junction (VGLJ)`,
-          duration: '20-22 hrs',
-          sleeperFare: 640,
-          ac3Fare: 1700,
-          ac2Fare: 2450,
-          frequency: 'Weekly (Thursdays)',
-          advice:
-            'Direct superfast corridor train connecting Western Maharashtra with Central and Northern India.',
-        },
-        {
-          trainName: 'Pune - Danapur SF Express',
-          trainNumber: '12149',
-          departureStation: 'Pune Junction (PUNE)',
-          arrivalStation: 'Prayagraj / Junction',
-          duration: '23-24 hrs',
-          sleeperFare: 670,
-          ac3Fare: 1750,
-          ac2Fare: 2500,
-          frequency: 'Runs Daily',
-          advice:
-            'Daily superfast connectivity via central rail corridors with easy onward taxi and local transit.',
-        },
-        {
-          trainName: 'Swarna Jayanti SF Express',
-          trainNumber: '12781',
-          departureStation: 'Pune Junction (PUNE)',
-          arrivalStation: 'Jhansi Junction (VGLJ)',
-          duration: '21 hrs',
-          sleeperFare: 640,
-          ac3Fare: 1680,
-          ac2Fare: 2420,
-          frequency: 'Weekly (Tuesdays)',
-          advice:
-            'Superfast priority train connecting Pune to Delhi corridor via Jhansi.',
-        },
-      ],
-      flights: {
-        originAirport: 'Pune International Airport (PNQ)',
-        destinationAirport: 'Gwalior Airport (GWL) / Khajuraho Airport (HJR)',
-        duration: '4 to 6 hrs (1-stop via Delhi or Mumbai)',
-        type: '1-stop connecting flight',
-        fareRange: '₹5,500 - ₹8,500',
-        topAirlines: ['IndiGo', 'Air India'],
-        advice:
-          'From Gwalior airport, pre-paid cabs to Jhansi/Baruasagar take about 2 hours along the four-lane NH-44 highway.',
-      },
-      road: {
-        distanceKm: 1050,
-        drivingHours: '19-21 hrs',
-        route: 'NH-60 to Nashik, NH-52 to Indore, NH-46 to Bhopal and Jhansi',
-        busOptions: 'Private AC Multi-Axle sleeper coaches operate via Indore',
-        busFare: '₹1,600 - ₹2,900',
-      },
-      smartTravelerAdvice:
-        'For optimal comfort and travel efficiency, the overnight train (Sleeper or AC 3-Tier) on Goa Express (12779) or Jhelum Express (11077) directly to Jhansi Junction is the top recommendation. From Jhansi, frequent local autos and shared taxis reach Baruasagar in 25-30 minutes for ₹250-400.',
-    };
-  }
-
-  // Corridor B: Mumbai / Pune -> Goa
-  if (
-    (origin.includes('mumbai') || origin.includes('pune')) &&
-    (dest.includes('goa') || dest.includes('panaji') || dest.includes('madgaon'))
-  ) {
-    return {
-      summary: `Traveling to Goa from ${fromCity} is scenic and convenient, with frequent Vande Bharat, Tejas Express, and comfortable overnight sleeper trains along the Konkan route.`,
-      trains: [
-        {
-          trainName: 'Vande Bharat Express',
-          trainNumber: '22229',
-          departureStation: `${fromCity} / CSMT`,
-          arrivalStation: 'Madgaon Junction (MAO)',
-          duration: '7.5 - 8 hrs',
-          sleeperFare: 0,
-          ac3Fare: 1815,
-          ac2Fare: 3355,
-          frequency: 'Runs 6 days/week',
-          advice: 'Fastest daytime train with panoramic windows, plush seating, and breakfast/lunch included.',
-        },
-        {
-          trainName: 'Konkan Kanya Express',
-          trainNumber: '20111',
-          departureStation: `${fromCity} / CSMT`,
-          arrivalStation: 'Madgaon Junction (MAO)',
-          duration: '11-12 hrs (Overnight)',
-          sleeperFare: 410,
-          ac3Fare: 1120,
-          ac2Fare: 1620,
-          frequency: 'Runs Daily',
-          advice: 'Classic overnight train. Board in the evening and wake up relaxed in North/South Goa.',
-        },
-        {
-          trainName: 'Mandovi Express',
-          trainNumber: '10103',
-          departureStation: `${fromCity} / CSMT`,
-          arrivalStation: 'Madgaon Junction (MAO)',
-          duration: '12 hrs',
-          sleeperFare: 395,
-          ac3Fare: 1080,
-          ac2Fare: 1540,
-          frequency: 'Runs Daily',
-          advice: 'Famous daytime journey through scenic Western Ghat tunnels and waterfalls with delicious pantry snacks.',
-        },
-        {
-          trainName: 'Goa Express',
-          trainNumber: '12780',
-          departureStation: 'Pune Junction (PUNE)',
-          arrivalStation: 'Vasco Da Gama (VSG)',
-          duration: '12-13 hrs',
-          sleeperFare: 390,
-          ac3Fare: 1050,
-          ac2Fare: 1520,
-          frequency: 'Runs Daily',
-          advice: 'Direct link from Pune via Satara and Londa with stunning Dudhsagar waterfall views.',
-        },
-      ],
-      flights: {
-        originAirport: `${fromCity} Airport`,
-        destinationAirport: 'Mopa International (GOX) / Dabolim (GOI)',
-        duration: '1 hr 15 mins (Direct)',
-        type: 'Direct nonstop flight',
-        fareRange: '₹2,500 - ₹4,800',
-        topAirlines: ['IndiGo', 'Akasa Air', 'Air India Express'],
-        advice: 'Book flights 3 weeks in advance for best fares. Electric bus shuttles run from airports to all major beaches.',
-      },
-      road: {
-        distanceKm: 580,
-        drivingHours: '10-12 hrs',
-        route: 'NH-48 via Pune - Kolhapur - Nipani - Amboli Ghat or Chorla Ghat',
-        busOptions: 'High-frequency AC Sleeper Volvos depart every evening from all major city hubs',
-        busFare: '₹900 - ₹1,800',
-      },
-      smartTravelerAdvice:
-        'For quick weekend getaways, direct flights or the daytime Vande Bharat save vacation hours. For families desiring a leisurely pace, the Konkan Kanya overnight train saves one night of hotel stay.',
-    };
-  }
-
-  // Corridor C: Mumbai / Delhi -> Varanasi / Prayagraj / Ayodhya
-  if (
-    dest.includes('varanasi') ||
-    dest.includes('banaras') ||
-    dest.includes('kashi') ||
-    dest.includes('prayagraj') ||
-    dest.includes('ayodhya')
-  ) {
-    return {
-      summary: `Reaching ${toCity} from ${fromCity} is very well supported by daily Superfast trains, direct flights, and national expressway corridors.`,
-      trains: [
-        {
-          trainName: 'Vande Bharat Express',
-          trainNumber: '22436',
-          departureStation: `${fromCity} Central / Junction`,
-          arrivalStation: 'Varanasi Junction (BSB)',
-          duration: '8 hrs',
-          sleeperFare: 0,
-          ac3Fare: 1750,
-          ac2Fare: 3300,
-          frequency: 'Runs 6 days/week',
-          advice: 'Modern high-speed express with clean onboard dining and punctual arrival.',
-        },
-        {
-          trainName: 'Shiv Ganga Express',
-          trainNumber: '12560',
-          departureStation: `${fromCity} Station`,
-          arrivalStation: 'Banaras (BSBS) / Varanasi (BSB)',
-          duration: '11 hrs (Overnight)',
-          sleeperFare: 435,
-          ac3Fare: 1165,
-          ac2Fare: 1650,
-          frequency: 'Runs Daily',
-          advice: 'Top-rated superfast train with confirmed punctuality record. Highly popular with pilgrims and tourists.',
-        },
-        {
-          trainName: 'Mahanagari Express / Kamayani Express',
-          trainNumber: '22177',
-          departureStation: `${fromCity} Junction`,
-          arrivalStation: 'Varanasi Junction (BSB)',
-          duration: '24-26 hrs',
-          sleeperFare: 680,
-          ac3Fare: 1780,
-          ac2Fare: 2550,
-          frequency: 'Runs Daily',
-          advice: 'Reliable long-distance corridor train with daily frequency and pantry services.',
-        },
-        {
-          trainName: 'Kashi Vishwanath Express',
-          trainNumber: '15128',
-          departureStation: `${fromCity} Station`,
-          arrivalStation: 'Banaras (BSBS)',
-          duration: '13-14 hrs',
-          sleeperFare: 420,
-          ac3Fare: 1120,
-          ac2Fare: 1590,
-          frequency: 'Runs Daily',
-          advice: 'Comfortable overnight option with stops at key sacred and historical stations.',
-        },
-      ],
-      flights: {
-        originAirport: `${fromCity} Airport`,
-        destinationAirport: 'Lal Bahadur Shastri International Airport (VNS)',
-        duration: '1.5 to 2.5 hrs (Direct)',
-        type: 'Direct flight',
-        fareRange: '₹3,800 - ₹6,500',
-        topAirlines: ['IndiGo', 'Air India', 'SpiceJet'],
-        advice: 'Airport is located in Babatpur, 26 km from the Ghats. Pre-booked cabs charge ₹700-900.',
-      },
-      road: {
-        distanceKm: 820,
-        drivingHours: '13-15 hrs',
-        route: 'Purvanchal Expressway & NH-19 (Golden Quadrilateral)',
-        busOptions: 'State government UPSRTC and private sleeper coaches operate regularly',
-        busFare: '₹1,100 - ₹2,100',
-      },
-      smartTravelerAdvice:
-        'Overnight trains like the Shiv Ganga Express or direct morning flights give the most relaxing start to your pilgrimage and cultural tour, leaving your days free for boat rides along the Ghats.',
-    };
-  }
-
-  // Generic Corridor (Universal Indian Corridor Calculator)
-  return {
-    summary: `Travel from ${fromCity} to ${toCity} is supported by Indian Railways Superfast and Express trains, regional domestic flights, and national highway corridors.`,
-    trains: [
-      {
-        trainName: `${fromCity} - ${toCity} Superfast Express`,
-        trainNumber: '12801',
-        departureStation: `${fromCity} Junction`,
-        arrivalStation: `${toCity} Central / Junction`,
-        duration: '14 to 18 hrs',
-        sleeperFare: 550,
-        ac3Fare: 1480,
-        ac2Fare: 2150,
-        frequency: 'Runs Daily',
-        advice:
-          'Check live seat availability and book berths on IRCTC 30 to 60 days ahead of travel dates.',
-      },
-      {
-        trainName: 'Intercity / Mail Express',
-        trainNumber: '11055',
-        departureStation: `${fromCity} Main Station`,
-        arrivalStation: `${toCity} Junction`,
-        duration: '16 to 20 hrs',
-        sleeperFare: 520,
-        ac3Fare: 1390,
-        ac2Fare: 2020,
-        frequency: 'Runs 4-5 days/week',
-        advice:
-          'Overnight train offering comfortable sleeping berths and convenient morning arrival.',
-      },
-      {
-        trainName: 'Garib Rath / SF Express',
-        trainNumber: '12209',
-        departureStation: `${fromCity} Junction`,
-        arrivalStation: `${toCity} Junction`,
-        duration: '13 to 16 hrs',
-        sleeperFare: 0,
-        ac3Fare: 980,
-        ac2Fare: 1850,
-        frequency: 'Bi-weekly',
-        advice:
-          'Fully air-conditioned superfast express with budget-friendly 3AC fares.',
-      },
-    ],
-    flights: {
-      originAirport: `${fromCity} Airport`,
-      destinationAirport: `Nearest Domestic Airport to ${toCity}`,
-      duration: '2 to 4 hrs',
-      type: 'Direct or 1-stop connecting',
-      fareRange: '₹4,200 - ₹7,200',
-      topAirlines: ['IndiGo', 'Air India', 'Akasa Air'],
-      advice: 'Prepaid airport taxi booths provide fixed government fares to your destination.',
-    },
-    road: {
-      distanceKm: 750,
-      drivingHours: '14-16 hrs',
-      route: 'National Highway corridor',
-      busOptions: 'State Road Transport Corporation (SRTC) and private AC sleeper coaches',
-      busFare: '₹1,100 - ₹2,200',
-    },
-    smartTravelerAdvice:
-      'For family and solo journeys, AC 3-Tier or AC 2-Tier trains offer the ideal combination of onboard comfort, safety, and relaxed overnight travel. For short vacations, direct flights save valuable exploration time.',
-  };
-};
-
 // ===== SERVICE: ROUTE & TRANSIT GUIDANCE FROM ORIGIN TO DESTINATION =====
 export const getTransitGuideService = async ({ origin, destination, destinationState = 'India' }) => {
   const fromCity = (origin || 'Pune').trim();
@@ -661,16 +316,9 @@ IMPORTANT SENSITIVITY RULE:
 - NEVER use terms like "middle class", "middle-class", "low income", or socio-economic labels. Treat all travelers with utmost respect and dignity. Refer to them as "travelers", "families", "couples", or "explorers".
 
 CRITICAL TRAIN COVERAGE REQUIREMENT:
-- List ALL major available direct and prominent connecting trains operating between ${fromCity} and ${toCity} / nearest major railway junction.
-- DO NOT limit to just 1 or 2 trains. Provide a comprehensive list of 4 to 8 real trains if available!
-- FOR PUNE ROUTES (e.g. Pune to Jhansi, Baruasagar, Gwalior, Delhi, UP, MP corridors), ALWAYS include:
-  * 12779 Goa Express (Daily via Pune, Daund Chord, Manmad, Bhusawal, Khandwa, Itarsi, Bhopal, Jhansi, Agra, Hazrat Nizamuddin)
-  * 11077 Jhelum Express (Daily via Pune, Daund, Manmad, Bhusawal, Khandwa, Itarsi, Bhopal, Jhansi, New Delhi, Jammu)
-  * 12149 Pune - Danapur SF Express (Daily via Pune, Daund, Manmad, Itarsi, Jabalpur, Prayagraj)
-  * 11101 Pune - Gwalior Express (Bi-weekly via Pune, Manmad, Itarsi, Bhopal, Jhansi, Gwalior)
-  * 11037 Pune - Gorakhpur Express (Weekly via Pune, Daund, Manmad, Bhusawal, Khandwa, Itarsi, Bhopal, Jhansi, Kanpur)
-  * 12781 Swarna Jayanti Express / 22685 Chandigarh SF Express
-- For any other city routes, include all prominent Rajdhani, Vande Bharat, Shatabdi, Superfast, and Mail/Express trains operating on the corridor.
+- List the major direct and prominent connecting trains operating between ${fromCity} and ${toCity} / nearest major railway junction.
+- Only include trains you are confident actually run on this route. If unsure, return fewer trains rather than guessing.
+- Include prominent Rajdhani, Vande Bharat, Shatabdi, Superfast, and Mail/Express trains operating on the corridor.
 
 Return ONLY a valid JSON object matching this schema:
 {
@@ -708,14 +356,13 @@ Return ONLY a valid JSON object matching this schema:
   "smartTravelerAdvice": "Helpful recommendation on balancing travel time, budget, and comfort for families, solo travelers, and groups."
 }`;
 
-    let result = await generateJson(prompt);
-
-    // If AI rate-limited, timed out, or incomplete, seamlessly switch to deterministic engine
-    if (!result || !result.trains || result.trains.length === 0) {
-      result = getDeterministicTransit(fromCity, toCity);
+    const result = await generateJson(prompt);
+    if (!result?.summary || !Array.isArray(result.trains)) {
+      throw errorHandler(503, AI_UNAVAILABLE_MESSAGE);
     }
 
     const sanitized = sanitizeDignifiedLanguage(result);
+    sanitized.aiGenerated = true;
     // Backward compatibility alias
     sanitized.middleClassRecommendation = sanitized.smartTravelerAdvice;
 
@@ -730,11 +377,15 @@ export const discoverPlaceService = async ({ placeName }) => {
     throw errorHandler(400, 'A valid destination or place name is required');
   }
 
-  const cleanName = placeName.trim();
+  const cleanName = placeName.trim().slice(0, 80);
+  const namePattern = escapeRegex(cleanName);
   const rawSlug = cleanName
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
+  if (!rawSlug) {
+    throw errorHandler(400, 'A valid destination or place name is required');
+  }
 
   const discoverKey = `discover_${rawSlug}`;
 
@@ -744,8 +395,8 @@ export const discoverPlaceService = async ({ placeName }) => {
     const existing = await Post.findOne({
       $or: [
         { slug: rawSlug },
-        { title: { $regex: new RegExp(`^${cleanName}$`, 'i') } },
-        { title: { $regex: new RegExp(`\\b${cleanName}\\b`, 'i') } },
+        { title: { $regex: new RegExp(`^${namePattern}$`, 'i') } },
+        { title: { $regex: new RegExp(`\\b${namePattern}\\b`, 'i') } },
       ],
     });
 
@@ -839,95 +490,22 @@ Return ONLY a valid JSON object matching this schema:
   ]
 }`;
 
-    let data = await generateJson(prompt);
+    const data = await generateJson(prompt);
 
-    // If AI generation failed, provide intelligent fallback structure
-    if (!data || !data.title || !data.waypoints) {
-      data = {
-        title: `${cleanName}: Unexplored Gem & Travel Guide`,
-        content: `${cleanName} is a wonderful destination full of genuine local culture, scenic landscapes, and warm hospitality. Perfect for families and travelers looking for an authentic experience away from overcrowded commercial tourist spots. Clean homestays, delicious local regional thalis, and friendly guides make it a memorable, budget-friendly journey.`,
-        category: 'nature',
-        region: 'Central India',
-        state: 'India',
-        coordinates: { lat: 20.5937, lng: 78.9629 },
-        bestSeason: 'October to March (Comfortable pleasant weather)',
-        nearestHubs: {
-          airport: 'Nearest Regional Domestic Airport (approx 80-120 km)',
-          railway: 'Major Indian Railways Junction (approx 15-40 km)',
-          highway: 'National Highway network with regular bus service',
-        },
-        budgetINR: { backpacker: 1300, moderate: 3000, luxury: 7500 },
-        permits: 'None required. Open access for Indian citizens.',
-        highlights: [
-          'Local Town Market & Food',
-          'Historic Heritage Landmark',
-          'Panoramic Sunset Viewpoint',
-          'Traditional Village Trails',
-        ],
-        waypoints: [
-          {
-            name: `${cleanName} Main Town Center & Market`,
-            lat: 20.5937,
-            lng: 78.9629,
-            day: 1,
-            description:
-              'Arrive and check into your homestay. Explore the lively local market, taste freshly made hot snacks, and plan local autos.',
-            distanceKm: 0,
-            transport: 'Auto / Walk',
-          },
-          {
-            name: `${cleanName} Central Landmark & Temple / Fort`,
-            lat: 20.601,
-            lng: 78.971,
-            day: 1,
-            description:
-              'Visit the prominent historical monument or sacred site with intricate architecture and peaceful surroundings.',
-            distanceKm: 4,
-            transport: 'Auto / Cab',
-          },
-          {
-            name: `${cleanName} Nature Viewpoint & Scenic Valley`,
-            lat: 20.615,
-            lng: 78.985,
-            day: 2,
-            description:
-              'Morning excursion to the highest local vantage point offering panoramic sunrise photography and fresh mountain air.',
-            distanceKm: 12,
-            transport: 'Taxi / Cab',
-          },
-          {
-            name: `${cleanName} Riverbank / Lakeside Walk`,
-            lat: 20.622,
-            lng: 78.992,
-            day: 2,
-            description:
-              'Relax by the clean water banks at sunset, watch local birds, and sample authentic evening tea before departure.',
-            distanceKm: 6,
-            transport: 'Walking / Auto',
-          },
-          {
-            name: `${cleanName} Regional Handicrafts & Artisan Quarter`,
-            lat: 20.628,
-            lng: 78.998,
-            day: 3,
-            description:
-              'Meet local artisans weaving traditional fabrics and sculpting pottery. Great place to pick up authentic souvenirs.',
-            distanceKm: 4,
-            transport: 'Auto / Walk',
-          },
-          {
-            name: `${cleanName} Famous Sweet Shop & Food Lane`,
-            lat: 20.634,
-            lng: 79.004,
-            day: 3,
-            description:
-              'Concluding culinary stop to sample famous local regional sweets, kachoris, and freshly prepared hot breakfast.',
-            distanceKm: 2,
-            transport: 'Walk',
-          },
-        ],
-      };
+    const isCoord = (lat, lng) =>
+      Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180;
+    const waypoints = Array.isArray(data?.waypoints)
+      ? data.waypoints.filter((wp) => wp && typeof wp.name === 'string' && isCoord(wp.lat, wp.lng))
+      : [];
+    if (
+      !data?.title ||
+      !data.content ||
+      !isCoord(data.coordinates?.lat, data.coordinates?.lng) ||
+      waypoints.length === 0
+    ) {
+      throw errorHandler(503, "We couldn't build a reliable guide for this place right now. Please try again shortly.");
     }
+    data.waypoints = waypoints;
 
     const sanitizedData = sanitizeDignifiedLanguage(data);
 
@@ -946,11 +524,24 @@ Return ONLY a valid JSON object matching this schema:
     const defaultImage =
       'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1200';
 
+    // Only copy known fields: AI output is untrusted and must not set ids, owners, media or raw HTML.
     const newPost = new Post({
-      ...sanitizedData,
+      title: String(sanitizedData.title).slice(0, 150),
+      content: plainTextToHtml(sanitizedData.content || ''),
+      category: sanitizedData.category,
+      region: sanitizedData.region,
+      state: sanitizedData.state,
+      coordinates: sanitizedData.coordinates,
+      bestSeason: sanitizedData.bestSeason,
+      nearestHubs: sanitizedData.nearestHubs,
+      budgetINR: sanitizedData.budgetINR,
+      permits: sanitizedData.permits,
+      highlights: sanitizedData.highlights,
+      waypoints: sanitizedData.waypoints,
+      source: 'ai',
       slug: finalSlug,
       userId: authorId,
-      image: sanitizedData.image || defaultImage,
+      image: defaultImage,
     });
 
     const savedPost = await newPost.save();

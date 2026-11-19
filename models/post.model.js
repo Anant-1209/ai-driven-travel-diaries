@@ -36,6 +36,11 @@ const postSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    source: {
+      type: String,
+      enum: ['curated', 'ai'],
+      default: 'curated',
+    },
     slug: {
       type: String,
       required: true,

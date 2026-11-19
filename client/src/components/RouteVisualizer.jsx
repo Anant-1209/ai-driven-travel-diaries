@@ -759,7 +759,7 @@ export default function RouteVisualizer({ post }) {
           sessionStorage.setItem(sessionKey, JSON.stringify(data.transit));
         } catch (e) {}
       } else {
-        setTransitError('Could not load live transit for this route.');
+        setTransitError(data.message || 'Could not load transit options for this route. Please try again.');
       }
     } catch (err) {
       setTransitError('Network issue while fetching transit.');
@@ -1457,8 +1457,20 @@ View full itinerary at: ${window.location.href}`;
             <div className='p-8 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 text-center my-6 shadow-sm'>
               <div className='animate-spin w-8 h-8 border-4 border-teal-500 border-t-transparent rounded-full mx-auto mb-3'></div>
               <p className='text-sm font-semibold text-slate-700 dark:text-slate-300'>
-                Finding all direct trains (including Goa Express) and fares from {originCity} to {post.title}...
+                Finding trains, flights and road options from {originCity} to {post.title}...
               </p>
+            </div>
+          )}
+
+          {!loadingTransit && transitError && (
+            <div className='p-5 my-6 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3'>
+              <p className='text-sm text-amber-800 dark:text-amber-200'>{transitError}</p>
+              <button
+                onClick={() => fetchTransit(originCity, true)}
+                className='px-4 py-2 rounded-xl text-xs font-bold bg-amber-600 text-white hover:bg-amber-700'
+              >
+                Try again
+              </button>
             </div>
           )}
 
@@ -1470,6 +1482,11 @@ View full itinerary at: ${window.location.href}`;
                   Route: {originCity} ➔ {post.title}
                 </span>
                 <h4 className='text-lg sm:text-xl font-bold mt-2'>{transitData.summary}</h4>
+                {transitData.aiGenerated && (
+                  <p className='mt-2 text-xs text-teal-100/90'>
+                    AI-generated estimate. Confirm train numbers, timings and fares on IRCTC or the airline before booking.
+                  </p>
+                )}
                 {transitData.smartTravelerAdvice && (
                   <div className='mt-4 pt-4 border-t border-white/20 flex items-start gap-3 text-xs sm:text-sm text-teal-100'>
                     <span className='text-xl'>💡</span>

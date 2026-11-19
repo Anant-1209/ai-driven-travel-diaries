@@ -9,6 +9,7 @@ import { useSocket } from '../context/SocketContext';
 import { Helmet } from 'react-helmet-async';
 import { HiBookmark, HiOutlineBookmark } from 'react-icons/hi';
 import { useSelector } from 'react-redux';
+import DOMPurify from 'dompurify';
 
 export default function PostPage() {
   const { postSlug } = useParams();
@@ -144,6 +145,11 @@ export default function PostPage() {
             <h1 className='text-3xl mt-5 p-3 text-center font-serif max-w-2xl mx-auto lg:text-4xl'>
               {post.title}
             </h1>
+            {post.source === 'ai' && (
+              <p className='mx-auto max-w-2xl text-center text-xs px-3 py-2 rounded-lg bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-200 border border-amber-200 dark:border-amber-800'>
+                AI-generated guide, not yet verified by travelers. Double-check timings, prices and permits locally.
+              </p>
+            )}
             <div className='flex justify-between items-center w-full max-w-2xl mx-auto'>
               <Link
                 to={`/search?category=${post.category}`}
@@ -218,7 +224,7 @@ export default function PostPage() {
             </div>
             <div
               className='p-3 max-w-2xl mx-auto w-full post-content'
-              dangerouslySetInnerHTML={{ __html: post.content }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content) }}
             ></div>
 
             {/* AI Video Walkthrough (if uploaded) */}
