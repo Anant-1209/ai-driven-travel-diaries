@@ -13,18 +13,12 @@ export const SocketProvider = ({ children }) => {
   const { currentUser } = useSelector((state) => state.user);
 
   useEffect(() => {
-    // Connect to backend
-    const newSocket = io(); // Automatically connects to the host (via proxy in Vite)
+    // Reconnect on login/logout so the server re-reads the auth cookie on handshake.
+    const newSocket = io();
     setSocket(newSocket);
 
     return () => newSocket.close();
-  }, []);
-
-  useEffect(() => {
-    if (socket && currentUser) {
-      socket.emit('registerUser', currentUser._id);
-    }
-  }, [socket, currentUser]);
+  }, [currentUser?._id]);
 
   return (
     <SocketContext.Provider value={socket}>
