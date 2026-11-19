@@ -14,11 +14,18 @@ import {
 import { verifyToken, verifyAdmin } from '../utils/verifyUser.js';
 import { validate } from '../middlewares/validate.middleware.js';
 import { updateUserSchema, setRoleSchema } from '../validations/user.validation.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
+import { getPassportService } from '../services/passport.service.js';
 
 const router = express.Router();
 
 router.get('/test', test);
 router.get('/me', verifyToken, getMe);
+router.get(
+  '/me/passport',
+  verifyToken,
+  asyncHandler(async (req, res) => res.json(await getPassportService(req.user.id)))
+);
 router.put('/update/:userId', verifyToken, validate(updateUserSchema), updateUser);
 router.put('/:userId/role', verifyToken, verifyAdmin, validate(setRoleSchema), setUserRole);
 router.delete('/delete/:userId', verifyToken, deleteUser);

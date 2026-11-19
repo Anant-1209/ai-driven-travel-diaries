@@ -18,7 +18,32 @@ export const updateTripSchema = z.object({
   body: z.object({
     title: z.string().trim().min(1).max(120).optional(),
     isPublic: z.boolean().optional(),
+    startDate: z.union([z.iso.date(), z.null()]).optional(),
+    checklist: z
+      .array(
+        z.object({
+          _id: objectId.optional(),
+          text: z.string().trim().min(1).max(120),
+          done: z.boolean(),
+        })
+      )
+      .max(30, 'Up to 30 checklist items')
+      .optional(),
   }),
+});
+
+export const feedbackSchema = z.object({
+  params: z.object({ id: objectId }),
+  body: z.object({
+    rating: z.number().int().min(1).max(5),
+    transportEasy: z.boolean().optional(),
+    dailySpendINR: z.number().int().min(0).max(200000).optional(),
+    tip: z.string().trim().max(280).optional(),
+  }),
+});
+
+export const insightsSchema = z.object({
+  query: z.object({ place: z.string().regex(/^[a-z0-9-]{1,100}$/, 'Invalid destination') }),
 });
 
 export const tripIdSchema = z.object({ params: z.object({ id: objectId }) });

@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import { Helmet } from 'react-helmet-async';
 import ReactMarkdown from 'react-markdown';
 import { whatsappUrl, tripShareText } from '../utils/share';
+import { TripCountdown, TripChecklist, TripFeedback } from '../components/TripTools';
 
 export default function TripPage() {
   const { shareId } = useParams();
@@ -152,6 +153,8 @@ export default function TripPage() {
         </p>
       )}
 
+      {trip.isOwner && <TripCountdown trip={trip} onUpdate={updateTrip} />}
+
       {trip.placeSlug && (
         <Link
           to={`/post/${trip.placeSlug}`}
@@ -164,6 +167,13 @@ export default function TripPage() {
       <article className='mt-6 p-6 bg-slate-50 dark:bg-slate-800 rounded-2xl shadow-sm prose dark:prose-invert max-w-none'>
         <ReactMarkdown>{trip.itinerary}</ReactMarkdown>
       </article>
+
+      {trip.isOwner && (
+        <>
+          <TripChecklist trip={trip} onUpdate={updateTrip} />
+          <TripFeedback trip={trip} onSubmitted={(changes) => setTrip((prev) => ({ ...prev, ...changes }))} />
+        </>
+      )}
 
       <p className='print:hidden mt-4 text-xs text-slate-500'>
         AI-generated plan. Check timings, prices and permits locally before you travel.

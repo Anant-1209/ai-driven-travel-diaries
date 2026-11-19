@@ -1,6 +1,16 @@
 import { Spinner } from 'flowbite-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { daysUntil } from './TripTools';
+
+const tripStatus = (trip) => {
+  if (trip.status === 'completed') return '✓ Completed';
+  if (!trip.startDate) return 'No travel date yet';
+  const days = daysUntil(trip.startDate);
+  if (days > 0) return `In ${days} ${days === 1 ? 'day' : 'days'}`;
+  if (days >= -trip.days) return 'Happening now';
+  return 'Back home? Share how it went';
+};
 
 export default function DashTrips() {
   const [trips, setTrips] = useState(null);
@@ -57,6 +67,7 @@ export default function DashTrips() {
               <p className='text-sm text-slate-500 mt-1'>
                 {trip.destination} · {trip.days} days · {trip.budget}
               </p>
+              <p className='text-sm font-semibold text-teal-700 dark:text-teal-300 mt-2'>{tripStatus(trip)}</p>
               <p className='text-xs text-slate-400 mt-3'>
                 Updated {new Date(trip.updatedAt).toLocaleDateString()}
                 {trip.copies > 0 && ` · copied ${trip.copies}×`}
