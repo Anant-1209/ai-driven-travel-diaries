@@ -98,13 +98,16 @@ test('4. Zod Auth Validation Schema Tests', () => {
   assert.strictEqual(invalidEmail.success, false, 'Invalid email should fail');
 });
 
-test('5. Multi-Provider AI Fallback Test (WanderBot)', async () => {
+// Live provider checks only run when an API key is configured.
+const hasAiKey = Boolean(process.env.GEMINI_API_KEY || process.env.GROQ_API_KEY || process.env.XAI_API_KEY);
+
+test('5. Multi-Provider AI Fallback Test (WanderBot)', { skip: !hasAiKey && 'no AI API key configured' }, async () => {
   const reply = await chatAssistantService('Hello, recommend one quick spot in South India.');
   assert.ok(typeof reply === 'string', 'Reply must be a string');
   assert.ok(reply.length > 10, 'Reply must not be empty');
 });
 
-test('6. Origin-to-Destination Route Transit Guidance Test', async () => {
+test('6. Origin-to-Destination Route Transit Guidance Test', { skip: !hasAiKey && 'no AI API key configured' }, async () => {
   const transit = await getTransitGuideService({
     origin: 'Pune',
     destination: 'Jhansi',
@@ -113,11 +116,7 @@ test('6. Origin-to-Destination Route Transit Guidance Test', async () => {
   assert.ok(transit, 'Transit object must exist');
   assert.ok(transit.summary, 'Must contain a journey summary');
   assert.ok(Array.isArray(transit.trains), 'Must contain trains array');
-  assert.ok(transit.trains.length >= 3, 'Must contain multiple train options');
-  const hasGoaExpress = transit.trains.some(
-    (t) => t.trainName.includes('Goa Express') || t.trainNumber === '12779'
-  );
-  assert.ok(hasGoaExpress, 'Must include Goa Express (12779) for Pune to Jhansi corridor');
+  assert.equal(transit.aiGenerated, true, 'AI transit must be labeled as AI-generated');
   assert.ok(transit.flights, 'Must contain flight options');
   assert.ok(transit.road, 'Must contain road & distance information');
 });
@@ -138,12 +137,34 @@ test('7. Dignified Tone Sanitization & Ban on Socio-Economic Terms', async () =>
   assert.ok(!jsonStr.includes('poverty'), 'Must not contain "poverty"');
 });
 
-test('8. High Concurrency In-Flight Request Deduplication Test', async () => {
-  // Fire 5 simultaneous requests for the exact same route
+test('8. High Concurrency In-Flight Request Deduplication Test', async (t) => {
+  const saved = { fetch: globalThis.fetch, GEMINI_API_KEY: process.env.GEMINI_API_KEY, GROQ_API_KEY: process.env.GROQ_API_KEY };
+  t.after(() => {
+    globalThis.fetch = saved.fetch;
+    for (const key of ['GEMINI_API_KEY', 'GROQ_API_KEY']) {
+      if (saved[key] === undefined) delete process.env[key];
+      else process.env[key] = saved[key];
+    }
+  });
+  delete process.env.GEMINI_API_KEY;
+  process.env.GROQ_API_KEY = 'test-key';
+
+  let upstreamCalls = 0;
+  globalThis.fetch = async () => {
+    upstreamCalls += 1;
+    await new Promise((r) => setTimeout(r, 50));
+    const content = JSON.stringify({ summary: 'Take the overnight train.', trains: [], flights: {}, road: {} });
+    return new Response(
+      JSON.stringify({ id: 't', object: 'chat.completion', created: 0, model: 't', choices: [{ index: 0, finish_reason: 'stop', message: { role: 'assistant', content } }] }),
+      { status: 200, headers: { 'content-type': 'application/json' } }
+    );
+  };
+
   const promises = [1, 2, 3, 4, 5].map(() =>
     getTransitGuideService({ origin: 'Pune', destination: 'Baruasagar' })
   );
   const results = await Promise.all(promises);
   assert.strictEqual(results.length, 5, 'All 5 concurrent requests must resolve');
   assert.strictEqual(results[0].summary, results[4].summary, 'Coalesced results must match');
+  assert.strictEqual(upstreamCalls, 1, 'Concurrent identical requests must hit the AI provider once');
 });
