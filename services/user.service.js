@@ -1,4 +1,7 @@
+import mongoose from 'mongoose';
 import User from '../models/user.model.js';
+import Trip from '../models/trip.model.js';
+import Story from '../models/story.model.js';
 import bcryptjs from 'bcryptjs';
 import { errorHandler } from '../utils/error.js';
 
@@ -24,8 +27,25 @@ export const updateUserService = async (userId, updateData) => {
 };
 
 export const deleteUserService = async (userId) => {
-  await User.findByIdAndDelete(userId);
+  const user = await User.findById(userId);
+  if (!user) throw errorHandler(404, 'User not found');
+  if (user.isAdmin && (await User.countDocuments({ isAdmin: true })) <= 1) {
+    throw errorHandler(400, 'The last admin cannot be deleted. Make someone else admin first.');
+  }
+  await user.deleteOne();
+  await Trip.deleteMany({ userId: user._id });
+  await Story.deleteMany({ userId: user._id });
   return 'User has been deleted';
+};
+
+export const setAdminService = async (actingUserId, targetUserId, isAdmin) => {
+  if (actingUserId === targetUserId) {
+    throw errorHandler(400, 'You cannot change your own admin role');
+  }
+  const user = await User.findByIdAndUpdate(targetUserId, { $set: { isAdmin } }, { new: true });
+  if (!user) throw errorHandler(404, 'User not found');
+  const { password, ...rest } = user._doc;
+  return rest;
 };
 
 export const getUsersService = async (query) => {
@@ -56,6 +76,13 @@ export const getUserService = async (userId) => {
   if (!user) throw errorHandler(404, 'User not found');
   const { password, ...rest } = user._doc;
   return rest;
+};
+
+export const getPublicProfileService = async (userId) => {
+  if (!mongoose.isValidObjectId(userId)) throw errorHandler(404, 'User not found');
+  const user = await User.findById(userId).select('username profilePicture isAdmin createdAt').lean();
+  if (!user) throw errorHandler(404, 'User not found');
+  return user;
 };
 
 export const savePostService = async (userId, postId) => {

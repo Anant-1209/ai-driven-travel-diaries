@@ -1,23 +1,20 @@
 import { Alert, Button, FileInput, Select, TextInput } from 'flowbite-react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import {
-  getDownloadURL,
-  getStorage,
-  ref,
-  uploadBytesResumable,
-} from 'firebase/storage';
-import { app } from '../firebase';
 import { useEffect, useState } from 'react';
 import { CircularProgressbar } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { uploadMedia } from '../utils/uploadMedia';
 
 export default function UpdatePost() {
   const [file, setFile] = useState(null);
   const [imageUploadProgress, setImageUploadProgress] = useState(null);
   const [imageUploadError, setImageUploadError] = useState(null);
+  const [videoFile, setVideoFile] = useState(null);
+  const [videoUploading, setVideoUploading] = useState(false);
+  const [videoUploadError, setVideoUploadError] = useState(null);
   const [formData, setFormData] = useState({});
   const [publishError, setPublishError] = useState(null);
   const { postId } = useParams();
@@ -48,39 +45,36 @@ export default function UpdatePost() {
   }, [postId]);
 
   const handleUpdloadImage = async () => {
+    if (!file) {
+      setImageUploadError('Please select an image');
+      return;
+    }
     try {
-      if (!file) {
-        setImageUploadError('Please select an image');
-        return;
-      }
       setImageUploadError(null);
-      const storage = getStorage(app);
-      const fileName = new Date().getTime() + '-' + file.name;
-      const storageRef = ref(storage, fileName);
-      const uploadTask = uploadBytesResumable(storageRef, file);
-      uploadTask.on(
-        'state_changed',
-        (snapshot) => {
-          const progress =
-            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setImageUploadProgress(progress.toFixed(0));
-        },
-        (error) => {
-          setImageUploadError('Image upload failed');
-          setImageUploadProgress(null);
-        },
-        () => {
-          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-            setImageUploadProgress(null);
-            setImageUploadError(null);
-            setFormData({ ...formData, image: downloadURL });
-          });
-        }
-      );
+      setImageUploadProgress(50);
+      const { url } = await uploadMedia(file);
+      setFormData((prev) => ({ ...prev, image: url }));
     } catch (error) {
-      setImageUploadError('Image upload failed');
+      setImageUploadError(error.message);
+    } finally {
       setImageUploadProgress(null);
-      console.log(error);
+    }
+  };
+
+  const handleUploadVideo = async () => {
+    if (!videoFile) {
+      setVideoUploadError('Please select a video file (.mp4, .webm)');
+      return;
+    }
+    try {
+      setVideoUploadError(null);
+      setVideoUploading(true);
+      const { url } = await uploadMedia(videoFile);
+      setFormData((prev) => ({ ...prev, videoUrl: url }));
+    } catch (error) {
+      setVideoUploadError(error.message);
+    } finally {
+      setVideoUploading(false);
     }
   };
   const handleSubmit = async (e) => {
@@ -170,6 +164,38 @@ export default function UpdatePost() {
             alt='upload'
             className='w-full h-72 object-cover'
           />
+        )}
+        <div className='flex gap-4 items-center justify-between border-4 border-purple-500 border-dotted p-3'>
+          <FileInput
+            type='file'
+            accept='video/mp4,video/webm'
+            onChange={(e) => setVideoFile(e.target.files[0])}
+          />
+          <Button
+            type='button'
+            gradientDuoTone='purpleToPink'
+            size='sm'
+            outline
+            onClick={handleUploadVideo}
+            disabled={videoUploading}
+          >
+            {videoUploading ? 'Uploading...' : formData.videoUrl ? 'Replace Video' : 'Upload Video'}
+          </Button>
+        </div>
+        {videoUploadError && <Alert color='failure'>{videoUploadError}</Alert>}
+        {formData.videoUrl && (
+          <div className='p-2 bg-slate-900 rounded-xl'>
+            <video key={formData.videoUrl} controls className='w-full max-h-60 rounded-lg'>
+              <source src={formData.videoUrl} type='video/mp4' />
+            </video>
+            <button
+              type='button'
+              className='mt-2 text-xs text-red-400 hover:underline'
+              onClick={() => setFormData((prev) => ({ ...prev, videoUrl: '' }))}
+            >
+              Remove video
+            </button>
+          </div>
         )}
         <ReactQuill
           theme='snow'

@@ -288,7 +288,7 @@ export const checkToxicityService = async (text) => {
     const reply = await generate(prompt);
     return reply.trim().toUpperCase().includes('TOXIC') ? 'TOXIC' : 'CLEAN';
   } catch (err) {
-    console.error('Toxicity check failed:', err);
+    console.warn(`Toxicity check skipped: ${err.message}`);
     return 'CLEAN';
   }
 };

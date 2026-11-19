@@ -97,12 +97,13 @@ export default function Header() {
   const navLinks = [
     { name: 'Home', path: '/' },
     { name: 'Stories', path: '/search' },
+    { name: 'Community', path: '/community' },
     { name: 'AI Planner', path: '/ai-planner', icon: '✨' },
     { name: 'About', path: '/about' },
   ];
 
   return (
-    <header className='sticky top-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800'>
+    <header className='print:hidden sticky top-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800'>
       <div className='max-w-7xl mx-auto px-4'>
         <div className='flex items-center justify-between h-16'>
 
@@ -274,6 +275,9 @@ export default function Header() {
                 </Dropdown.Header>
                 <Link to='/dashboard?tab=profile'>
                   <Dropdown.Item>Profile</Dropdown.Item>
+                </Link>
+                <Link to='/dashboard?tab=trips'>
+                  <Dropdown.Item>My Trips</Dropdown.Item>
                 </Link>
                 <Link to='/chat'>
                   <Dropdown.Item>Messages / Chat 💬</Dropdown.Item>

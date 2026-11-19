@@ -5,6 +5,9 @@ import CallToAction from '../components/CallToAction';
 import CommentSection from '../components/CommentSection';
 import PostCard from '../components/PostCard';
 import RouteVisualizer from '../components/RouteVisualizer';
+import TravelerStories from '../components/TravelerStories';
+import LocalPartners from '../components/LocalPartners';
+import TravelerInsights from '../components/TravelerInsights';
 import { useSocket } from '../context/SocketContext';
 import { Helmet } from 'react-helmet-async';
 import { HiBookmark, HiOutlineBookmark } from 'react-icons/hi';
@@ -303,6 +306,12 @@ export default function PostPage() {
       </div>
       {post && (
         <>
+          <TravelerInsights placeSlug={post.slug} placeName={post.title.split(':')[0]} />
+
+          <LocalPartners placeSlug={post.slug} placeName={post.title.split(':')[0]} />
+
+          <TravelerStories placeSlug={post.slug} placeName={post.title.split(':')[0]} />
+
           <CommentSection postId={post._id} />
 
           <div className='flex flex-col justify-center items-center mb-5'>

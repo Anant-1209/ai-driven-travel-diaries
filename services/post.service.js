@@ -38,6 +38,7 @@ export const getPostsService = async (query) => {
     ...(region && { region }),
     ...(slug && { slug }),
     ...(postId && { _id: postId }),
+    ...(query.hasVideo === 'true' && { videoUrl: { $nin: [null, ''] } }),
     ...(searchPattern && {
       $or: [
         { title: { $regex: searchPattern, $options: 'i' } },
@@ -73,19 +74,14 @@ export const deletePostService = async (postId) => {
   return 'The post has been deleted';
 };
 
+const UPDATABLE_FIELDS = ['title', 'content', 'category', 'image', 'images', 'videoUrl', 'region', 'state', 'bestSeason', 'permits', 'highlights'];
+
 export const updatePostService = async (postId, updateData) => {
-  const updatedPost = await Post.findByIdAndUpdate(
-    postId,
-    {
-      $set: {
-        title: updateData.title,
-        content: updateData.content,
-        category: updateData.category,
-        image: updateData.image,
-      },
-    },
-    { new: true }
+  const changes = Object.fromEntries(
+    UPDATABLE_FIELDS.filter((field) => updateData[field] !== undefined).map((field) => [field, updateData[field]])
   );
+  const updatedPost = await Post.findByIdAndUpdate(postId, { $set: changes }, { new: true });
+  if (!updatedPost) throw errorHandler(404, 'Post not found');
   postCache.flushAll(); // Clear cache
   return updatedPost;
 };

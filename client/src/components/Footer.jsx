@@ -52,7 +52,7 @@ export default function FooterCom() {
   ];
 
   return (
-    <footer className='bg-slate-900 text-slate-400'>
+    <footer className='print:hidden bg-slate-900 text-slate-400'>
       {/* Main Footer */}
       <div className='max-w-7xl mx-auto px-4 py-16'>
         <div className='grid grid-cols-2 md:grid-cols-5 gap-8'>

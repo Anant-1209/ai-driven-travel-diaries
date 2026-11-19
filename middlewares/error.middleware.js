@@ -20,8 +20,11 @@ export const globalErrorMiddleware = (err, req, res, next) => {
     message = `An account with that ${field} already exists.`;
   }
 
-  // Log the error using Winston
-  logger.error(`[${req.method}] ${req.originalUrl} >> StatusCode:: ${statusCode}, Message:: ${message}`);
+  // Client mistakes (4xx) are expected traffic; only server faults are errors.
+  logger.log(
+    statusCode >= 500 ? 'error' : 'warn',
+    `[${req.method}] ${req.originalUrl} >> StatusCode:: ${statusCode}, Message:: ${message}`
+  );
 
   res.status(statusCode).json({
     success: false,
