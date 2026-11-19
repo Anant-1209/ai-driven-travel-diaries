@@ -6,3 +6,5 @@ docker-compose.yml
 .env
 client/node_modules
 client/dist
+uploads
+test
