@@ -1,4 +1,6 @@
 import { updateUserService, deleteUserService, getUsersService, getUserService, savePostService, getSavedPostsService } from '../services/user.service.js';
+import { errorHandler } from '../utils/error.js';
+import { authCookieOptions } from './auth.controller.js';
 
 export const test = (req, res) => {
   res.json({ message: 'API is working!' });
@@ -30,7 +32,7 @@ export const deleteUser = async (req, res, next) => {
 
 export const signout = (req, res, next) => {
   try {
-    res.clearCookie('access_token').status(200).json('User has been signed out');
+    res.clearCookie('access_token', authCookieOptions).status(200).json('User has been signed out');
   } catch (error) {
     next(error);
   }

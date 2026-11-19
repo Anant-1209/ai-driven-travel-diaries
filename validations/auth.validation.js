@@ -14,6 +14,12 @@ export const signupSchema = z.object({
   }),
 });
 
+export const googleAuthSchema = z.object({
+  body: z.object({
+    idToken: z.string().min(1, 'Google credential is required'),
+  }),
+});
+
 export const signinSchema = z.object({
   body: z.object({
     email: z.string().email('Invalid email address'),
