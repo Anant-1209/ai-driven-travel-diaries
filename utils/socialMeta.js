@@ -60,7 +60,7 @@ export const socialPreview = (indexFile) => async (req, res, next) => {
     if (!html) return next();
     const meta = await findMeta(req.params);
     if (!meta) return next();
-    const origin = `${req.protocol}://${req.get('host')}`;
+    const origin = process.env.PUBLIC_URL?.replace(/\/+$/, '') || `${req.protocol}://${req.get('host')}`;
     const image = meta.image?.startsWith('/') ? origin + meta.image : meta.image;
     res.type('html').send(renderWithMeta(html, { ...meta, image, url: origin + req.originalUrl }));
   } catch (error) {
