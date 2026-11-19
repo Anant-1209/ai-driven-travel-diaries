@@ -6,14 +6,7 @@ import {
   deleteTripService,
   copyTripService,
 } from '../services/trip.service.js';
-
-const handle = (fn) => async (req, res, next) => {
-  try {
-    await fn(req, res);
-  } catch (error) {
-    next(error);
-  }
-};
+import { asyncHandler as handle } from '../utils/asyncHandler.js';
 
 export const createTrip = handle(async (req, res) => {
   res.status(201).json(await createTripService(req.user.id, req.body));

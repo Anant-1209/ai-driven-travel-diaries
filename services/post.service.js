@@ -38,6 +38,7 @@ export const getPostsService = async (query) => {
     ...(region && { region }),
     ...(slug && { slug }),
     ...(postId && { _id: postId }),
+    ...(query.hasVideo === 'true' && { videoUrl: { $nin: [null, ''] } }),
     ...(searchPattern && {
       $or: [
         { title: { $regex: searchPattern, $options: 'i' } },

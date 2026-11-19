@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import User from '../models/user.model.js';
 import Trip from '../models/trip.model.js';
+import Story from '../models/story.model.js';
 import bcryptjs from 'bcryptjs';
 import { errorHandler } from '../utils/error.js';
 
@@ -33,6 +34,7 @@ export const deleteUserService = async (userId) => {
   }
   await user.deleteOne();
   await Trip.deleteMany({ userId: user._id });
+  await Story.deleteMany({ userId: user._id });
   return 'User has been deleted';
 };
 

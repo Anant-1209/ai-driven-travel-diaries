@@ -5,6 +5,7 @@ import LatestStories from '../components/LatestStories';
 import TrendingDestinations from '../components/TrendingDestinations';
 import NewsletterSubscribe from '../components/NewsletterSubscribe';
 import PostCard from '../components/PostCard';
+import FeaturedReels from '../components/FeaturedReels';
 
 export default function Home() {
   const [posts, setPosts] = useState([]);
@@ -29,6 +30,8 @@ export default function Home() {
 
       {/* SECTION 2: Latest Stories — Horizontal Scroll */}
       <LatestStories posts={latestPosts} />
+
+      <FeaturedReels />
 
       {/* SECTION 3: Trending Destinations — Bento Grid */}
       <TrendingDestinations />

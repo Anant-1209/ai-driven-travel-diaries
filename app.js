@@ -12,6 +12,7 @@ import aiRoutes from './routes/ai.route.js';
 import messageRoutes from './routes/message.route.js';
 import uploadRoutes from './routes/upload.route.js';
 import tripRoutes from './routes/trip.route.js';
+import storyRoutes from './routes/story.route.js';
 import { apiLimiter } from './middlewares/rateLimiter.js';
 import { globalErrorMiddleware } from './middlewares/error.middleware.js';
 import { errorHandler } from './utils/error.js';
@@ -42,6 +43,7 @@ export const createApp = () => {
   app.use('/api/message', messageRoutes);
   app.use('/api/upload', uploadRoutes);
   app.use('/api/trip', tripRoutes);
+  app.use('/api/story', storyRoutes);
   app.use('/api', (req, res, next) => next(errorHandler(404, 'API route not found')));
 
   app.use('/uploads', express.static(path.join(rootDir, 'uploads')));

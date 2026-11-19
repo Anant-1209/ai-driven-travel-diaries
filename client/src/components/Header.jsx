@@ -97,6 +97,7 @@ export default function Header() {
   const navLinks = [
     { name: 'Home', path: '/' },
     { name: 'Stories', path: '/search' },
+    { name: 'Community', path: '/community' },
     { name: 'AI Planner', path: '/ai-planner', icon: '✨' },
     { name: 'About', path: '/about' },
   ];
