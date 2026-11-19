@@ -1,5 +1,6 @@
 import Post from '../models/post.model.js';
 import { errorHandler } from '../utils/error.js';
+import { escapeRegex, asString } from '../utils/sanitize.js';
 import NodeCache from 'node-cache';
 
 const postCache = new NodeCache({ stdTTL: 300 }); // Cache for 5 minutes
@@ -18,27 +19,33 @@ export const createPostService = async (postData, userId) => {
 
 export const getPostsService = async (query) => {
   const startIndex = parseInt(query.startIndex) || 0;
-  const limit = parseInt(query.limit) || 9;
+  const limit = Math.min(parseInt(query.limit) || 9, 50);
   const sortDirection = query.order === 'asc' ? 1 : -1;
-  const searchWords = query.searchTerm ? query.searchTerm.split(' ').filter(w => w.length > 1) : [];
-  
-  console.log(`[DEBUG] Searching for: "${query.searchTerm || 'None'}" (Keywords: ${searchWords.join(', ')})`);
+  const userId = asString(query.userId);
+  const category = asString(query.category);
+  const region = asString(query.region);
+  const slug = asString(query.slug);
+  const postId = asString(query.postId);
+  const searchTerm = asString(query.searchTerm)?.trim().slice(0, 100);
+  const searchPattern = searchTerm && escapeRegex(searchTerm);
+  const searchWords = searchTerm
+    ? searchTerm.split(' ').filter((w) => w.length > 1).map(escapeRegex)
+    : [];
 
   const posts = await Post.find({
-    ...(query.userId && { userId: query.userId }),
-    ...(query.category && { category: query.category }),
-    ...(query.region && { region: query.region }),
-    ...(query.slug && { slug: query.slug }),
-    ...(query.postId && { _id: query.postId }),
-    ...(query.searchTerm && {
+    ...(userId && { userId }),
+    ...(category && { category }),
+    ...(region && { region }),
+    ...(slug && { slug }),
+    ...(postId && { _id: postId }),
+    ...(searchPattern && {
       $or: [
-        { title: { $regex: query.searchTerm, $options: 'i' } },
-        { content: { $regex: query.searchTerm, $options: 'i' } },
-        { slug: { $regex: query.searchTerm, $options: 'i' } },
-        { state: { $regex: query.searchTerm, $options: 'i' } },
-        { category: { $regex: query.searchTerm, $options: 'i' } },
-        { highlights: { $elemMatch: { $regex: query.searchTerm, $options: 'i' } } },
-        // Match individual keywords
+        { title: { $regex: searchPattern, $options: 'i' } },
+        { content: { $regex: searchPattern, $options: 'i' } },
+        { slug: { $regex: searchPattern, $options: 'i' } },
+        { state: { $regex: searchPattern, $options: 'i' } },
+        { category: { $regex: searchPattern, $options: 'i' } },
+        { highlights: { $elemMatch: { $regex: searchPattern, $options: 'i' } } },
         ...searchWords.flatMap(word => [
           { title: { $regex: word, $options: 'i' } },
           { content: { $regex: word, $options: 'i' } },
@@ -51,9 +58,6 @@ export const getPostsService = async (query) => {
     .sort({ updatedAt: sortDirection })
     .skip(startIndex)
     .limit(limit);
-
-  const realCount = await Post.countDocuments();
-  console.log(`[DEBUG] Found ${posts.length} matching posts. (Database has ${realCount} total posts)`);
 
   const totalPosts = await Post.countDocuments();
   const now = new Date();
