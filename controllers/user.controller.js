@@ -1,4 +1,4 @@
-import { updateUserService, deleteUserService, getUsersService, getUserService, savePostService, getSavedPostsService } from '../services/user.service.js';
+import { updateUserService, deleteUserService, getUsersService, getUserService, getPublicProfileService, setAdminService, savePostService, getSavedPostsService } from '../services/user.service.js';
 import { errorHandler } from '../utils/error.js';
 import { authCookieOptions } from './auth.controller.js';
 
@@ -52,7 +52,24 @@ export const getUsers = async (req, res, next) => {
 
 export const getUser = async (req, res, next) => {
   try {
-    const user = await getUserService(req.params.userId);
+    const user = await getPublicProfileService(req.params.userId);
+    res.status(200).json(user);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getMe = async (req, res, next) => {
+  try {
+    res.status(200).json(await getUserService(req.user.id));
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const setUserRole = async (req, res, next) => {
+  try {
+    const user = await setAdminService(req.user.id, req.params.userId, req.body.isAdmin);
     res.status(200).json(user);
   } catch (error) {
     next(error);

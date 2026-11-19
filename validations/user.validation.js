@@ -15,3 +15,8 @@ export const updateUserSchema = z.object({
     profilePicture: z.string().url('Invalid URL').optional(),
   }),
 });
+
+export const setRoleSchema = z.object({
+  body: z.object({ isAdmin: z.boolean() }),
+  params: z.object({ userId: z.string().regex(/^[a-f0-9]{24}$/i, 'Invalid user id') }),
+});

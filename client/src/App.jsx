@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateSuccess, signoutSuccess } from './redux/user/userSlice';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import PrivateRoute from './components/PrivateRoute';
@@ -23,6 +25,20 @@ const AIPlanner = lazy(() => import('./pages/AIPlanner'));
 const Chat = lazy(() => import('./pages/Chat'));
 
 export default function App() {
+  const dispatch = useDispatch();
+  const currentUserId = useSelector((state) => state.user.currentUser?._id);
+
+  // The stored user can be stale (role changed, session expired); refresh it from the server.
+  useEffect(() => {
+    if (!currentUserId) return;
+    fetch('/api/user/me')
+      .then(async (res) => {
+        if (res.ok) dispatch(updateSuccess(await res.json()));
+        else if (res.status === 401) dispatch(signoutSuccess());
+      })
+      .catch(() => {});
+  }, [currentUserId, dispatch]);
+
   return (
     <BrowserRouter>
       <ScrollToTop />

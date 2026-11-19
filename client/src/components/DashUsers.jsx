@@ -46,6 +46,24 @@ export default function DashUsers() {
     }
   };
 
+  const handleRoleChange = async (user) => {
+    try {
+      const res = await fetch(`/api/user/${user._id}/role`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isAdmin: !user.isAdmin }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setUsers((prev) => prev.map((u) => (u._id === user._id ? { ...u, isAdmin: data.isAdmin } : u)));
+      } else {
+        alert(data.message);
+      }
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+
   const handleDeleteUser = async () => {
     try {
         const res = await fetch(`/api/user/delete/${userIdToDelete}`, {
@@ -56,7 +74,8 @@ export default function DashUsers() {
             setUsers((prev) => prev.filter((user) => user._id !== userIdToDelete));
             setShowModal(false);
         } else {
-            console.log(data.message);
+            alert(data.message);
+            setShowModal(false);
         }
     } catch (error) {
         console.log(error.message);
@@ -74,6 +93,7 @@ export default function DashUsers() {
               <Table.HeadCell>Username</Table.HeadCell>
               <Table.HeadCell>Email</Table.HeadCell>
               <Table.HeadCell>Admin</Table.HeadCell>
+              <Table.HeadCell>Role</Table.HeadCell>
               <Table.HeadCell>Delete</Table.HeadCell>
             </Table.Head>
             {users.map((user) => (
@@ -96,6 +116,15 @@ export default function DashUsers() {
                       <FaCheck className='text-green-500' />
                     ) : (
                       <FaTimes className='text-red-500' />
+                    )}
+                  </Table.Cell>
+                  <Table.Cell>
+                    {user._id === currentUser._id ? (
+                      <span className='text-xs text-gray-400'>You</span>
+                    ) : (
+                      <Button size='xs' color={user.isAdmin ? 'gray' : 'success'} onClick={() => handleRoleChange(user)}>
+                        {user.isAdmin ? 'Remove admin' : 'Make admin'}
+                      </Button>
                     )}
                   </Table.Cell>
                   <Table.Cell>
