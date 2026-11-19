@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import User from '../models/user.model.js';
+import Trip from '../models/trip.model.js';
 import bcryptjs from 'bcryptjs';
 import { errorHandler } from '../utils/error.js';
 
@@ -31,6 +32,7 @@ export const deleteUserService = async (userId) => {
     throw errorHandler(400, 'The last admin cannot be deleted. Make someone else admin first.');
   }
   await user.deleteOne();
+  await Trip.deleteMany({ userId: user._id });
   return 'User has been deleted';
 };
 

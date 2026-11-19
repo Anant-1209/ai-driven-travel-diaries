@@ -7,6 +7,7 @@ import {
   HiAnnotation,
   HiChartPie,
   HiBookmark,
+  HiMap,
 } from 'react-icons/hi';
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
@@ -65,6 +66,11 @@ export default function DashSidebar() {
               as='div'
             >
               Profile
+            </Sidebar.Item>
+          </Link>
+          <Link to='/dashboard?tab=trips'>
+            <Sidebar.Item active={tab === 'trips'} icon={HiMap} as='div'>
+              My Trips
             </Sidebar.Item>
           </Link>
           <Link to='/dashboard?tab=saved'>

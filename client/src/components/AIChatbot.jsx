@@ -48,7 +48,7 @@ export default function AIChatbot() {
   };
 
   return (
-    <div className='fixed bottom-5 right-5 z-50'>
+    <div className='print:hidden fixed bottom-5 right-5 z-50'>
       {!isOpen && (
         <Button pill gradientDuoTone='purpleToPink' size='xl' onClick={() => setIsOpen(true)}>
           <HiChat className='h-6 w-6' />

@@ -23,6 +23,7 @@ const PostPage = lazy(() => import('./pages/PostPage'));
 const Search = lazy(() => import('./pages/Search'));
 const AIPlanner = lazy(() => import('./pages/AIPlanner'));
 const Chat = lazy(() => import('./pages/Chat'));
+const TripPage = lazy(() => import('./pages/TripPage'));
 
 export default function App() {
   const dispatch = useDispatch();
@@ -62,6 +63,7 @@ export default function App() {
           <Route path='/destinations' element={<Projects />} />
           <Route path='/post/:postSlug' element={<PostPage />} />
           <Route path='/ai-planner' element={<AIPlanner />} />
+          <Route path='/trip/:shareId' element={<TripPage />} />
         </Routes>
       </Suspense>
       <AIChatbot />
