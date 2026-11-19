@@ -8,6 +8,7 @@ import DashComments from '../components/DashComments';
 import DashboardComp from '../components/DashboardComp';
 import DashSavedPosts from '../components/DashSavedPosts';
 import DashTrips from '../components/DashTrips';
+import DashPartners from '../components/DashPartners';
 
 export default function Dashboard() {
   const location = useLocation();
@@ -38,6 +39,7 @@ export default function Dashboard() {
       {/* saved posts */}
       {tab === 'saved' && <DashSavedPosts />}
       {tab === 'trips' && <DashTrips />}
+      {tab === 'partners' && <DashPartners />}
     </div>
   );
 }
